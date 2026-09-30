@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Altas IMSS · Panel de Ventas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --rosa:#ec1263; --verde:#0e8a3e; --verdeclaro:#22c55e; --oscuro:#0a1710;
+    --medio:#12271a; --claro:#1b3826; --texto:#f4fbf5;
+    --gris:#8aab97; --dorado:#f2b705;
+    --perdida:#dc2626;
+    --nav-h:68px;
+  }
+  body.modo-claro {
+    --oscuro:#f6fbf6; --medio:#e9f5ea; --claro:#dcefdd;
+    --texto:#0f2216; --gris:#4f6e5a; --rosa:#c40e54;
+    --verde:#0a6b30; --verdeclaro:#0f9668; --dorado:#a97104;
+    --perdida:#a4231b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+  .header-total-monto, .precio-grande-display, .paso2-total-monto,
+  .dist-monto, .gasto-numpad-display, .numpad-display, .dia-total-mini{
+    -webkit-text-stroke:2px rgba(0,0,0,0.55);
+    paint-order:stroke fill;
+    text-shadow:-2.5px -2.5px 0 var(--texto),2.5px -2.5px 0 var(--texto),
+      -2.5px 2.5px 0 var(--texto),2.5px 2.5px 0 var(--texto),0 4px 3px rgba(0,0,0,0.4);
+  }
+
+  body{background:var(--oscuro);color:var(--texto);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:calc(var(--nav-h) + 10px);}
+
+  header{background:var(--medio);padding:10px 16px 8px;border-bottom:2px solid var(--rosa);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+  header .brand{display:flex;align-items:center;gap:8px;}
+  header h1{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;color:var(--rosa);letter-spacing:0.5px;line-height:1;}
+  header .sub-brand{font-size:9px;color:var(--verdeclaro);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+  .header-total{text-align:right;}
+  .header-total-label{font-size:9px;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;}
+  .header-total-monto{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;color:var(--verdeclaro);letter-spacing:1px;line-height:1;}
+  .header-fecha{font-size:9px;color:var(--gris);margin-top:1px;}
+
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--medio);border-top:2px solid var(--rosa);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom);}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--gris);gap:2px;padding:6px 2px;position:relative;}
+  .nav-item:active{opacity:0.7;}
+  .nav-item .nav-icon{font-size:19px;line-height:1;}
+  .nav-item .nav-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.2px;}
+  .nav-item.active{color:var(--dorado);}
+  .nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--dorado);border-radius:0 0 4px 4px;}
+  .nav-badge{position:absolute;top:2px;right:22%;background:var(--perdida);color:white;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;}
+  .nav-badge.visible{display:flex;}
+
+  .submenu{background:var(--medio);border-bottom:1px solid var(--claro);display:none;overflow-x:auto;}
+  .submenu.visible{display:flex;}
+  .sub-item{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:700;color:var(--gris);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;text-transform:uppercase;letter-spacing:0.4px;}
+  .sub-item.active{color:var(--dorado);border-bottom-color:var(--dorado);}
+
+  .seccion{display:none;padding:12px 14px;}
+  .seccion.active{display:block;}
+  .cat-label{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px;letter-spacing:1px;color:var(--dorado);margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--claro);}
+
+  /* ── TOGGLE TIPO DE VENTA ── */
+  .tipo-venta-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+  .tipo-venta-btn{background:var(--medio);border:2px solid var(--claro);border-radius:14px;padding:16px 8px;text-align:center;cursor:pointer;transition:all .15s;}
+  .tipo-venta-btn .tv-icon{font-size:26px;display:block;margin-bottom:4px;}
+  .tipo-venta-btn .tv-label{font-size:12px;font-weight:700;color:var(--texto);}
+  .tipo-venta-btn .tv-sub{font-size:10px;color:var(--gris);margin-top:2px;}
+  .tipo-venta-btn.active{border-color:var(--rosa);background:rgba(236,18,99,0.1);}
+  .tipo-venta-btn.active .tv-label{color:var(--rosa);}
+
+  .vendedor-chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+  .vendedor-chip{background:var(--medio);border:2px solid var(--claro);border-radius:12px;padding:12px 10px;text-align:center;cursor:pointer;transition:all .15s;}
+  .vendedor-chip.selected{border-color:var(--verdeclaro);background:rgba(34,197,94,0.1);}
+  .vendedor-chip .vc-nombre{font-size:13px;font-weight:700;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .vendedor-chip .vc-precio{font-size:11px;color:var(--verdeclaro);margin-top:2px;}
+  .vendedor-chip.nuevo{border-style:dashed;color:var(--gris);}
+  .vendedor-chip.nuevo .vc-nombre{color:var(--gris);}
+
+  .btn-registrar-venta{width:100%;background:var(--rosa);border:none;border-radius:14px;padding:18px;color:white;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:0.5px;margin-bottom:16px;}
+  .btn-registrar-venta:active{opacity:0.85;}
+  .btn-registrar-venta:disabled{opacity:0.35;}
+
+  .venta-hoy-item{background:var(--medio);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--verdeclaro);}
+  .venta-hoy-item.vendedor{border-left-color:var(--dorado);}
+  .venta-hoy-item .vh-info{flex:1;min-width:0;}
+  .venta-hoy-item .vh-nombre{font-size:13px;font-weight:700;}
+  .venta-hoy-item .vh-detalle{font-size:11px;color:var(--gris);margin-top:2px;}
+  .venta-hoy-item .vh-montos{text-align:right;}
+  .venta-hoy-item .vh-precio{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:var(--texto);}
+  .venta-hoy-item .vh-ganancia{font-size:11px;color:var(--verdeclaro);font-weight:700;}
+  .btn-eliminar{background:transparent;border:none;color:var(--gris);font-size:17px;cursor:pointer;padding:4px 6px;margin-left:6px;}
+  .btn-eliminar:active{color:var(--perdida);}
+
+  /* ── MODAL VENTA ── */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:flex-end;justify-content:center;}
+  .overlay.visible{display:flex;}
+  .modal{background:var(--medio);border-radius:20px 20px 0 0;padding:20px 18px 30px;width:100%;max-width:480px;border-top:3px solid var(--rosa);max-height:90vh;overflow-y:auto;}
+  .modal h2{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;color:var(--dorado);letter-spacing:0.5px;margin-bottom:2px;}
+  .modal .modal-sub{font-size:12px;color:var(--gris);margin-bottom:14px;}
+
+  .paso-venta{display:none;}
+  .paso-venta.activo{display:block;}
+  .precio-grande{background:var(--oscuro);border:2px solid var(--verdeclaro);border-radius:14px;padding:18px 16px;text-align:center;margin-bottom:14px;}
+  .precio-grande-display{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:42px;color:var(--verdeclaro);letter-spacing:1px;line-height:1;}
+  .precio-grande-label{font-size:10px;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;}
+
+  .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+  .numpad-btn{background:var(--oscuro);border:1px solid var(--claro);border-radius:10px;padding:15px 8px;color:var(--texto);font-size:20px;font-weight:700;cursor:pointer;text-align:center;user-select:none;}
+  .numpad-btn:active{background:var(--claro);transform:scale(0.94);}
+  .numpad-btn.btn-borrar{color:var(--rosa);font-size:16px;}
+  .btn-siguiente-pago{width:100%;background:var(--rosa);border:none;border-radius:12px;padding:16px;color:white;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;letter-spacing:0.5px;}
+  .btn-siguiente-pago:disabled{opacity:0.4;}
+  .btn-volver{background:transparent;border:1px solid var(--claro);border-radius:8px;padding:9px 15px;color:var(--gris);font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px;}
+
+  .resumen-venta{background:var(--oscuro);border:1px solid var(--claro);border-radius:12px;padding:14px;margin-bottom:14px;}
+  .rv-fila{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--claro);font-size:13px;}
+  .rv-fila:last-child{border-bottom:none;}
+  .rv-fila .rv-label{color:var(--gris);}
+  .rv-fila input{width:100px;background:var(--medio);border:1px solid var(--claro);border-radius:8px;padding:8px 10px;color:var(--verdeclaro);font-size:15px;font-weight:700;text-align:right;outline:none;}
+  .rv-fila input:focus{border-color:var(--dorado);}
+  .rv-fila.ganancia .rv-label{color:var(--texto);font-weight:700;}
+  .rv-fila.ganancia .rv-monto{color:var(--verdeclaro);font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;}
+  .rv-fila.ganancia-vendedor .rv-monto{color:var(--dorado);font-weight:700;}
+
+  .metodos-section label{display:block;font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+  .metodos-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .btn-metodo{background:var(--oscuro);border:2px solid var(--claro);border-radius:10px;padding:11px 6px;color:var(--gris);cursor:pointer;text-align:center;font-size:11px;font-weight:700;line-height:1.4;}
+  .btn-metodo.selected{border-color:var(--verdeclaro);color:var(--verdeclaro);background:rgba(34,197,94,0.1);}
+  .modal-btns{display:flex;gap:10px;margin-top:16px;}
+  .btn-cancelar{flex:1;background:transparent;border:1px solid var(--claro);border-radius:10px;padding:14px;color:var(--gris);font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-confirmar{flex:2;background:var(--verde);border:none;border-radius:10px;padding:14px;color:white;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-confirmar:active{opacity:0.8;}
+
+  /* ── VENDEDORES ── */
+  .vendedor-card{background:var(--medio);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid var(--claro);cursor:pointer;}
+  .vendedor-card .vc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .vendedor-card .vc-nombre-grande{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px;color:var(--texto);}
+  .vendedor-card .vc-tel{font-size:11px;color:var(--gris);}
+  .vendedor-card .vc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  .vc-stat{background:var(--oscuro);border-radius:8px;padding:8px;text-align:center;}
+  .vc-stat .vs-label{font-size:9px;color:var(--gris);text-transform:uppercase;letter-spacing:0.4px;}
+  .vc-stat .vs-valor{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:var(--verdeclaro);}
+  .btn-add-vendedor{width:100%;background:var(--rosa);border:none;border-radius:12px;padding:15px;color:white;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;}
+
+  /* ── CLIENTES / VIGENCIAS ── */
+  .recordatorio-banner{background:rgba(242,183,5,0.1);border:1px solid var(--dorado);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--texto);line-height:1.6;}
+  .recordatorio-banner b{color:var(--dorado);}
+  .cliente-card{background:var(--medio);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:2px solid var(--claro);}
+  .cliente-card.st-vencido{border-color:var(--perdida);background:rgba(220,38,38,0.06);}
+  .cliente-card.st-porvencer{border-color:var(--dorado);background:rgba(242,183,5,0.07);}
+  .cliente-card.st-activo{border-color:var(--claro);}
+  .cliente-card.st-baja{opacity:0.5;}
+  .cc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+  .cc-nombre{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;color:var(--texto);}
+  .cc-sub{font-size:11px;color:var(--gris);margin-top:2px;}
+  .cc-badge{font-size:10px;font-weight:700;padding:4px 9px;border-radius:12px;white-space:nowrap;}
+  .cc-badge.st-vencido{background:rgba(220,38,38,0.18);color:var(--perdida);}
+  .cc-badge.st-porvencer{background:rgba(242,183,5,0.2);color:var(--dorado);}
+  .cc-badge.st-activo{background:rgba(34,197,94,0.15);color:var(--verdeclaro);}
+  .cc-badge.st-baja{background:var(--claro);color:var(--gris);}
+  .cc-fechas{font-size:11px;color:var(--gris);margin:6px 0 10px;}
+  .cc-btns{display:flex;gap:6px;flex-wrap:wrap;}
+  .cc-btns button{flex:1;min-width:90px;background:var(--oscuro);border:1px solid var(--claro);border-radius:8px;padding:9px 6px;font-size:11px;font-weight:700;cursor:pointer;color:var(--texto);}
+  .cc-btns button.pago{color:var(--verdeclaro);border-color:var(--verdeclaro);}
+  .cc-btns button.wa{color:#25D366;border-color:#25D366;}
+  .cc-btns button.baja{color:var(--perdida);border-color:var(--perdida);}
+  .clientes-filtro{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;}
+  .clientes-filtro .cf-btn{flex-shrink:0;padding:8px 14px;border-radius:16px;border:1px solid var(--claro);background:transparent;color:var(--gris);font-size:11px;font-weight:700;cursor:pointer;}
+  .clientes-filtro .cf-btn.active{border-color:var(--dorado);color:var(--dorado);background:rgba(242,183,5,0.08);}
+  .form-field{margin-bottom:12px;}
+  .form-field label{display:block;font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:700;}
+  .form-field input{width:100%;background:var(--oscuro);border:1px solid var(--claro);border-radius:10px;padding:12px 14px;color:var(--texto);font-size:14px;outline:none;}
+  .form-field input:focus{border-color:var(--rosa);}
+
+  /* ── DINERO / DISTRIBUCIÓN ── */
+  .dist-header{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;letter-spacing:1px;color:var(--dorado);text-align:center;margin-bottom:2px;}
+  .dist-sub{font-size:11px;color:var(--gris);text-align:center;margin-bottom:16px;}
+  .dist-cascada{background:var(--medio);border-radius:12px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--claro);}
+  .dc-fila{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--claro);}
+  .dc-fila:last-child{border-bottom:none;padding-top:9px;}
+  .dc-fila .dc-label{color:var(--gris);}
+  .dc-fila .dc-monto{font-weight:700;}
+  .dc-fila.neto .dc-label{color:var(--texto);font-weight:700;}
+  .dc-fila.neto .dc-monto{color:var(--verdeclaro);font-size:16px;}
+  .dist-card{border-radius:14px;padding:16px;margin-bottom:10px;text-align:center;}
+  .dist-titulo{font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:700;}
+  .dist-monto{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:34px;letter-spacing:1px;}
+  .dist-detalle{font-size:11px;margin-top:4px;opacity:0.8;}
+  .card-verde{background:rgba(34,197,94,0.08);border:2px solid var(--verdeclaro);}
+  .card-verde .dist-titulo,.card-verde .dist-monto{color:var(--verdeclaro);}
+  .card-dorado{background:rgba(242,183,5,0.1);border:2px solid var(--dorado);}
+  .card-dorado .dist-titulo,.card-dorado .dist-monto{color:var(--dorado);}
+  .card-rosa{background:rgba(236,18,99,0.08);border:2px solid var(--rosa);}
+  .card-rosa .dist-titulo,.card-rosa .dist-monto{color:var(--rosa);}
+
+  .dist-config{background:var(--medio);border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid var(--claro);}
+  .dist-config h3{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:14px;color:var(--gris);letter-spacing:1px;margin-bottom:12px;}
+  .dist-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+  .dist-row label{font-size:12px;color:var(--gris);flex:1;}
+  .dist-row input{width:56px;background:var(--oscuro);border:1px solid var(--claro);border-radius:8px;padding:8px;color:var(--texto);font-size:14px;font-weight:700;text-align:center;outline:none;}
+  .dist-pct-warn{font-size:11px;color:var(--perdida);text-align:center;margin-top:4px;display:none;}
+  .dist-pct-warn.visible{display:block;}
+
+  .ahorro-item{background:var(--oscuro);border:1px solid var(--claro);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+  .ahorro-top{display:flex;justify-content:space-between;align-items:center;}
+  .ahorro-nombre{font-size:13px;font-weight:700;color:var(--texto);}
+  .ahorro-monto{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:var(--verdeclaro);}
+  .ahorro-barra-wrap{height:6px;background:var(--claro);border-radius:4px;margin-top:6px;overflow:hidden;}
+  .ahorro-barra{height:100%;border-radius:4px;background:var(--verdeclaro);}
+  .ahorro-meta-txt{font-size:10px;color:var(--gris);margin-top:4px;}
+  .ahorro-btns-row{display:flex;gap:6px;margin-top:8px;}
+  .ahorro-btns-row button{flex:1;background:var(--medio);border:1px solid var(--claro);border-radius:8px;padding:7px;font-size:11px;font-weight:700;cursor:pointer;color:var(--gris);}
+  .ahorro-btns-row button.dep{color:var(--verdeclaro);border-color:var(--verdeclaro);}
+  .ahorro-btns-row button.ret{color:var(--perdida);border-color:var(--perdida);}
+  .btn-add-ahorro{width:100%;background:var(--claro);border:1px dashed var(--gris);border-radius:10px;padding:13px;color:var(--gris);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+
+  .compromiso-item{background:var(--oscuro);border:1px solid var(--claro);border-radius:10px;padding:11px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+  .compromiso-item.pagado{opacity:0.5;}
+  .compromiso-item .co-nombre{font-size:13px;font-weight:600;}
+  .compromiso-item .co-fecha{font-size:10px;color:var(--gris);}
+  .compromiso-item .co-monto{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;color:var(--dorado);}
+
+  /* ── GASTOS / REGISTRO ── */
+  .gasto-form{background:var(--medio);border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid var(--claro);}
+  .gasto-form h3{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;color:var(--rosa);letter-spacing:0.5px;margin-bottom:12px;}
+  .input-row{display:flex;gap:10px;margin-bottom:10px;}
+  .input-row input{flex:1;background:var(--oscuro);border:1px solid var(--claro);border-radius:8px;padding:12px 14px;color:var(--texto);font-size:14px;outline:none;}
+  .gasto-numpad-display{background:var(--oscuro);border:2px solid var(--perdida);border-radius:10px;padding:14px 16px;color:var(--perdida);font-size:26px;font-weight:700;text-align:center;margin-bottom:8px;min-height:56px;cursor:pointer;}
+  .btn-agregar-gasto{width:100%;background:var(--rosa);border:none;border-radius:8px;padding:13px;color:white;font-size:14px;font-weight:700;cursor:pointer;}
+  .tipo-gasto-btns{display:flex;gap:8px;margin-bottom:10px;}
+  .tipo-gasto-btn{flex:1;padding:10px 6px;border-radius:8px;border:2px solid var(--claro);background:transparent;color:var(--gris);font-size:12px;font-weight:700;cursor:pointer;}
+  .tipo-gasto-btn.selected{border-color:var(--dorado);background:rgba(242,183,5,0.1);color:var(--dorado);}
+
+  .movimiento{background:var(--medio);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--claro);}
+  .movimiento.gasto{border-left-color:var(--perdida);}
+  .movimiento .nombre-mov{font-size:14px;font-weight:600;}
+  .movimiento .detalle-mov{font-size:11px;color:var(--gris);margin-top:2px;}
+  .movimiento .monto-mov{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;}
+  .movimiento.gasto .monto-mov{color:var(--perdida);}
+
+  .resumen-box{background:var(--medio);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid var(--claro);}
+  .resumen-box h3{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;color:var(--dorado);letter-spacing:0.5px;margin-bottom:12px;}
+  .resumen-fila{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--claro);font-size:14px;}
+  .resumen-fila:last-child{border-bottom:none;}
+  .resumen-fila .concepto{color:var(--gris);}
+  .resumen-fila .monto{font-weight:700;}
+  .resumen-fila.total-final .concepto{color:var(--texto);font-weight:700;}
+  .resumen-fila.total-final .monto{color:var(--verdeclaro);font-size:19px;}
+  .btn-cerrar-dia{width:100%;background:var(--rosa);border:none;border-radius:10px;padding:15px;color:white;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;}
+
+  .dia-card{background:var(--medio);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid var(--claro);}
+  .dia-card .dia-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .dia-card .dia-fecha{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;color:var(--dorado);}
+  .dia-card .dia-total-mini{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;color:var(--verdeclaro);}
+  .dia-card .dia-detalle{font-size:12px;color:var(--gris);line-height:1.8;}
+  .dia-card .dia-detalle span{color:var(--texto);font-weight:600;}
+  .btn-ver-dia{background:transparent;border:1px solid var(--claro);border-radius:8px;padding:8px 14px;color:var(--gris);font-size:12px;cursor:pointer;margin-top:8px;}
+
+  /* ── ANÁLISIS ── */
+  .analisis-card{background:var(--medio);border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid var(--claro);}
+  .analisis-card h3{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:15px;color:var(--dorado);margin-bottom:12px;}
+  .ranking-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--claro);font-size:13px;}
+  .ranking-item:last-child{border-bottom:none;}
+  .ranking-item .rk-pos{color:var(--gris);width:20px;}
+  .ranking-item .rk-nombre{flex:1;font-weight:600;}
+  .ranking-item .rk-monto{color:var(--verdeclaro);font-weight:700;}
+
+  /* ── AJUSTES ── */
+  .ajuste-box{background:var(--medio);border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid var(--claro);}
+  .ajuste-box h3{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:15px;color:var(--dorado);margin-bottom:10px;}
+  .ajuste-box p.hint{font-size:11px;color:var(--gris);margin-bottom:10px;line-height:1.5;}
+  .btn-secundario{width:100%;background:var(--claro);border:1px solid var(--gris);border-radius:10px;padding:13px;color:var(--texto);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+  .btn-peligro{width:100%;background:rgba(220,38,38,0.12);border:1px solid var(--perdida);border-radius:10px;padding:13px;color:var(--perdida);font-size:13px;font-weight:700;cursor:pointer;}
+  .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;}
+  .switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;inset:0;background:var(--claro);border-radius:24px;transition:.2s;}
+  .slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:var(--gris);border-radius:50%;transition:.2s;}
+  input:checked + .slider{background:var(--verde);}
+  input:checked + .slider::before{transform:translateX(20px);background:white;}
+
+  /* ── PANTALLA BLOQUEO PIN ── */
+  .overlay-lock{display:none;position:fixed;inset:0;background:#050b07;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+  .overlay-lock.visible{display:flex;}
+  .lock-logo{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;color:var(--rosa);letter-spacing:1px;margin-bottom:2px;}
+  .lock-sub{font-size:12px;color:var(--gris);margin-bottom:22px;text-align:center;}
+  .lock-dots{display:flex;gap:14px;margin-bottom:14px;min-height:18px;}
+  .lock-dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--dorado);background:transparent;}
+  .lock-dot.filled{background:var(--dorado);}
+  .lock-error{font-size:12px;color:var(--perdida);font-weight:700;min-height:18px;margin-bottom:10px;text-align:center;}
+  .lock-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:320px;margin-top:6px;}
+  .lock-numpad-btn{background:var(--medio);border:1px solid var(--claro);border-radius:16px;padding:22px 8px;color:var(--texto);font-size:26px;font-weight:700;cursor:pointer;text-align:center;}
+  .lock-numpad-btn:active{background:var(--claro);}
+  .lock-numpad-btn.btn-borrar{color:var(--dorado);font-size:18px;}
+
+  .toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--verdeclaro);color:var(--oscuro);padding:12px 22px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:all 0.3s;z-index:400;white-space:nowrap;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .empty-state{text-align:center;padding:36px 20px;color:var(--gris);font-size:13px;}
+  .empty-state .icon{font-size:32px;margin-bottom:8px;}
+
+  .modo-toggle{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:150;background:var(--claro);border:1px solid var(--gris);border-radius:20px;padding:5px 12px;color:var(--gris);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<div class="overlay-lock" id="overlay-lock">
+  <div class="lock-logo">🩺 ALTAS IMSS</div>
+  <div class="lock-sub">Ingresa tu PIN para continuar</div>
+  <div class="lock-dots" id="lock-dots"></div>
+  <div class="lock-error" id="lock-error"></div>
+  <div class="lock-numpad">
+    <div class="lock-numpad-btn" onclick="lockPress('1')">1</div>
+    <div class="lock-numpad-btn" onclick="lockPress('2')">2</div>
+    <div class="lock-numpad-btn" onclick="lockPress('3')">3</div>
+    <div class="lock-numpad-btn" onclick="lockPress('4')">4</div>
+    <div class="lock-numpad-btn" onclick="lockPress('5')">5</div>
+    <div class="lock-numpad-btn" onclick="lockPress('6')">6</div>
+    <div class="lock-numpad-btn" onclick="lockPress('7')">7</div>
+    <div class="lock-numpad-btn" onclick="lockPress('8')">8</div>
+    <div class="lock-numpad-btn" onclick="lockPress('9')">9</div>
+    <div class="lock-numpad-btn" style="visibility:hidden">0</div>
+    <div class="lock-numpad-btn" onclick="lockPress('0')">0</div>
+    <div class="lock-numpad-btn btn-borrar" onclick="lockPress('del')">⌫</div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div>
+      <h1>🩺 ALTAS IMSS</h1>
+      <div class="sub-brand">Panel de Ventas</div>
+    </div>
+  </div>
+  <div class="header-total">
+    <div class="header-total-label">Ganancia hoy</div>
+    <div class="header-total-monto" id="header-total-monto">$0</div>
+    <div class="header-fecha" id="header-fecha"></div>
+  </div>
+</header>
+
+<div class="modo-toggle" onclick="toggleModoClaro()" id="modo-toggle-btn">☀️ Modo claro</div>
+
+<!-- ═══ TAB VENTA ═══ -->
+<div class="seccion active" id="tab-venta">
+  <div class="cat-label">Nueva Venta</div>
+
+  <div class="tipo-venta-toggle">
+    <div class="tipo-venta-btn active" id="btn-tipo-directa" onclick="seleccionarTipoVenta('directa')">
+      <span class="tv-icon">🙋</span>
+      <div class="tv-label">Venta directa</div>
+      <div class="tv-sub">Yo se la doy al cliente</div>
+    </div>
+    <div class="tipo-venta-btn" id="btn-tipo-vendedor" onclick="seleccionarTipoVenta('vendedor')">
+      <span class="tv-icon">🤝</span>
+      <div class="tv-label">A vendedor</div>
+      <div class="tv-sub">Le vendo a un revendedor</div>
+    </div>
+  </div>
+
+  <div id="wrap-selector-vendedor" style="display:none;">
+    <div class="cat-label" style="margin-top:6px;">Elige al vendedor</div>
+    <div class="vendedor-chip-grid" id="venta-vendedor-grid"></div>
+  </div>
+
+  <button class="btn-registrar-venta" id="btn-abrir-venta" onclick="abrirModalVenta()">➕ Registrar alta vendida</button>
+
+  <div class="cat-label">Ventas de hoy</div>
+  <div id="ventas-hoy-list"></div>
+</div>
+
+<!-- ═══ TAB VENDEDORES ═══ -->
+<div class="seccion" id="tab-vendedores">
+  <div class="cat-label">Mis Vendedores</div>
+  <button class="btn-add-vendedor" onclick="abrirModalVendedor()">➕ Agregar vendedor</button>
+  <div id="vendedores-list"></div>
+</div>
+
+<!-- ═══ TAB DINERO ═══ -->
+<div class="seccion" id="tab-dinero">
+  <div class="submenu visible" id="submenu-dinero">
+    <div class="sub-item active" onclick="cambiarSubTab('dinero','reparto')">Reparto</div>
+    <div class="sub-item" onclick="cambiarSubTab('dinero','ahorros')">Ahorros</div>
+    <div class="sub-item" onclick="cambiarSubTab('dinero','compromisos')">Compromisos</div>
+  </div>
+
+  <div id="dinero-reparto">
+    <div class="dist-header">Reparto de Ganancia — Hoy</div>
+    <div class="dist-sub">Con base en la ganancia neta acumulada del día</div>
+
+    <div class="dist-cascada" id="dist-cascada"></div>
+
+    <div class="dist-card card-rosa">
+      <div class="dist-titulo">💳 Pagos (50%)</div>
+      <div class="dist-monto" id="dist-pagos">$0</div>
+      <div class="dist-detalle">Deudas, servicios, proveedores</div>
+    </div>
+    <div class="dist-card card-dorado">
+      <div class="dist-titulo">🧍 Personal (30%)</div>
+      <div class="dist-monto" id="dist-personal">$0</div>
+      <div class="dist-detalle">Tus gastos personales</div>
+    </div>
+    <div class="dist-card card-verde">
+      <div class="dist-titulo">🐷 Ahorro (20%)</div>
+      <div class="dist-monto" id="dist-ahorro">$0</div>
+      <div class="dist-detalle">Se va directo a tus metas</div>
+    </div>
+
+    <div class="dist-config">
+      <h3>⚙️ Configurar porcentajes</h3>
+      <div class="dist-row"><label>💳 Pagos</label><input type="number" id="pct-pagos" value="50" oninput="actualizarPct()">%</div>
+      <div class="dist-row"><label>🧍 Personal</label><input type="number" id="pct-personal" value="30" oninput="actualizarPct()">%</div>
+      <div class="dist-row"><label>🐷 Ahorro</label><input type="number" id="pct-ahorro" value="20" oninput="actualizarPct()">%</div>
+      <div class="dist-pct-warn" id="pct-warn">⚠️ Los porcentajes deben sumar 100%</div>
+    </div>
+  </div>
+
+  <div id="dinero-ahorros" style="display:none;">
+    <div class="cat-label">Metas de Ahorro</div>
+    <button class="btn-add-ahorro" onclick="abrirModalAhorro()">➕ Nueva meta de ahorro</button>
+    <div id="ahorros-list"></div>
+  </div>
+
+  <div id="dinero-compromisos" style="display:none;">
+    <div class="cat-label">Compromisos / Pagos Pendientes</div>
+    <button class="btn-add-ahorro" onclick="abrirModalCompromiso()">➕ Nuevo compromiso</button>
+    <div id="compromisos-list"></div>
+  </div>
+</div>
+
+<!-- ═══ TAB REGISTRO ═══ -->
+<div class="seccion" id="tab-registro">
+  <div class="submenu visible" id="submenu-registro">
+    <div class="sub-item active" onclick="cambiarSubTab('registro','hoy')">Hoy</div>
+    <div class="sub-item" onclick="cambiarSubTab('registro','gastos')">Gastos</div>
+    <div class="sub-item" onclick="cambiarSubTab('registro','historial')">Historial</div>
+    <div class="sub-item" onclick="cambiarSubTab('registro','analisis')">Análisis</div>
+  </div>
+
+  <div id="registro-hoy">
+    <div class="resumen-box">
+      <h3>📊 Resumen de hoy</h3>
+      <div id="resumen-hoy-body"></div>
+    </div>
+    <button class="btn-cerrar-dia" onclick="pedirCerrarDia()">🔒 Cerrar el día</button>
+  </div>
+
+  <div id="registro-gastos" style="display:none;">
+    <div class="gasto-form">
+      <h3>💸 Registrar gasto</h3>
+      <div class="input-row"><input type="text" id="gasto-concepto" placeholder="Concepto del gasto"></div>
+      <div class="tipo-gasto-btns">
+        <div class="tipo-gasto-btn selected" id="tg-negocio" onclick="selTipoGasto('negocio')">📦 Negocio</div>
+        <div class="tipo-gasto-btn" id="tg-personal" onclick="selTipoGasto('personal')">🧍 Personal</div>
+      </div>
+      <div class="gasto-numpad-display" id="gasto-display" onclick="void(0)">$0</div>
+      <div class="numpad">
+        <div class="numpad-btn" onclick="gastoNumpadPress('1')">1</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('2')">2</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('3')">3</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('4')">4</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('5')">5</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('6')">6</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('7')">7</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('8')">8</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('9')">9</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('.')">.</div>
+        <div class="numpad-btn" onclick="gastoNumpadPress('0')">0</div>
+        <div class="numpad-btn btn-borrar" onclick="gastoNumpadPress('del')">⌫</div>
+      </div>
+      <button class="btn-agregar-gasto" style="margin-top:10px;" onclick="agregarGasto()">Agregar gasto</button>
+    </div>
+    <div class="cat-label">Gastos de hoy</div>
+    <div id="gastos-list"></div>
+  </div>
+
+  <div id="registro-historial" style="display:none;">
+    <div id="historial-list"></div>
+  </div>
+
+  <div id="registro-analisis" style="display:none;">
+    <div class="analisis-card">
+      <h3>📈 Ganancia últimos días</h3>
+      <canvas id="chart-ganancia" height="180"></canvas>
+    </div>
+    <div class="analisis-card">
+      <h3>🏆 Ranking de vendedores</h3>
+      <div id="ranking-vendedores"></div>
+    </div>
+    <div class="analisis-card">
+      <h3>🧮 Totales acumulados</h3>
+      <div id="totales-acumulados"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB CLIENTES (vigencias / recordatorios) ═══ -->
+<div class="seccion" id="tab-clientes">
+  <div class="cat-label">Vigencias y recordatorios</div>
+  <div class="recordatorio-banner">🔔 Cada alta dura <b id="banner-ciclo">28</b> días. A partir del día <b id="banner-recordatorio">23</b> se marca "por vencer" para que le recuerdes a la persona (o al vendedor) que debe pagar su mensualidad.</div>
+  <div class="clientes-filtro">
+    <div class="cf-btn active" data-f="todos" onclick="filtrarClientes('todos')">Todos</div>
+    <div class="cf-btn" data-f="vencido" onclick="filtrarClientes('vencido')">🔴 Vencidos</div>
+    <div class="cf-btn" data-f="porvencer" onclick="filtrarClientes('porvencer')">🟡 Por vencer</div>
+    <div class="cf-btn" data-f="activo" onclick="filtrarClientes('activo')">🟢 Activos</div>
+    <div class="cf-btn" data-f="baja" onclick="filtrarClientes('baja')">⚪ De baja</div>
+  </div>
+  <div id="clientes-list"></div>
+</div>
+
+<!-- ═══ MODAL DETALLE CLIENTE ═══ -->
+<div class="overlay" id="overlay-detalle-cliente" onclick="cerrarDetalleClienteFondo(event)">
+  <div class="modal" id="modal-detalle-cliente"></div>
+</div>
+
+<!-- ═══ MODAL RENOVAR CLIENTE ═══ -->
+<div class="overlay" id="overlay-renovar" onclick="cerrarRenovarFondo(event)">
+  <div class="modal" id="modal-renovar"></div>
+</div>
+
+<!-- ═══ TAB AJUSTES ═══ -->
+<div class="seccion" id="tab-ajustes">
+  <div class="cat-label">Ajustes</div>
+
+  <div class="ajuste-box">
+    <h3>💰 Costo de cada alta</h3>
+    <p class="hint">Lo que a ti te cuesta tramitar cada alta. Se usa como valor sugerido al registrar una venta, pero puedes cambiarlo en cada venta individual.</p>
+    <div class="form-field"><input type="number" id="ajuste-costo-default" oninput="guardarCostoDefault()"></div>
+  </div>
+
+  <div class="ajuste-box">
+    <h3>🗓️ Vigencia de las altas</h3>
+    <p class="hint">Cada cuántos días vence una alta y en qué día empezar a recordar el pago.</p>
+    <div class="form-field"><label>Días de vigencia</label><input type="number" id="ajuste-ciclo-dias" oninput="guardarCicloAjuste()"></div>
+    <div class="form-field"><label>Recordar a partir del día</label><input type="number" id="ajuste-dia-recordatorio" oninput="guardarCicloAjuste()"></div>
+  </div>
+
+  <div class="ajuste-box">
+    <h3>🔒 PIN de acceso</h3>
+    <p class="hint">Protege el panel con un PIN de 4 dígitos. Déjalo vacío para desactivar el bloqueo.</p>
+    <div class="form-field"><input type="text" maxlength="4" inputmode="numeric" id="ajuste-pin" placeholder="Ej: 1234" oninput="guardarPinAjuste()"></div>
+  </div>
+
+  <div class="ajuste-box">
+    <div class="toggle-row">
+      <span>☀️ Modo claro</span>
+      <label class="switch"><input type="checkbox" id="switch-modo-claro" onchange="toggleModoClaroSwitch()"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <div class="ajuste-box">
+    <h3>💾 Respaldo de datos</h3>
+    <p class="hint">Descarga tu información o restáurala en otro dispositivo.</p>
+    <button class="btn-secundario" onclick="exportarDatos()">⬇️ Descargar respaldo (JSON)</button>
+    <input type="file" id="input-importar" accept=".json" style="display:none" onchange="importarDatos(event)">
+    <button class="btn-secundario" onclick="document.getElementById('input-importar').click()">⬆️ Restaurar respaldo</button>
+  </div>
+
+  <div class="ajuste-box">
+    <h3>⚠️ Zona de riesgo</h3>
+    <button class="btn-peligro" onclick="confirmarReset()">🗑️ Borrar todos los datos</button>
+  </div>
+</div>
+
+<!-- ═══ MODAL VENTA ═══ -->
+<div class="overlay" id="overlay-venta" onclick="cerrarModalVentaFondo(event)">
+  <div class="modal">
+    <div class="paso-venta activo" id="paso-venta-1">
+      <h2 id="venta-p1-titulo">Precio de venta</h2>
+      <div class="modal-sub" id="venta-p1-sub"></div>
+      <div class="precio-grande">
+        <div class="precio-grande-display" id="venta-precio-display">$0</div>
+        <div class="precio-grande-label">Toca los números</div>
+      </div>
+      <div class="numpad">
+        <div class="numpad-btn" onclick="ventaNumpadPress('1')">1</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('2')">2</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('3')">3</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('4')">4</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('5')">5</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('6')">6</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('7')">7</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('8')">8</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('9')">9</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('.')">.</div>
+        <div class="numpad-btn" onclick="ventaNumpadPress('0')">0</div>
+        <div class="numpad-btn btn-borrar" onclick="ventaNumpadPress('del')">⌫</div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModalVenta()">Cancelar</button>
+        <button class="btn-siguiente-pago" id="btn-venta-siguiente" onclick="irPasoVenta2()" disabled>Siguiente</button>
+      </div>
+    </div>
+
+    <div class="paso-venta" id="paso-venta-2">
+      <button class="btn-volver" onclick="volverPasoVenta1()">← Volver</button>
+      <h2>Confirmar venta</h2>
+      <div class="modal-sub" id="venta-p2-sub"></div>
+
+      <div class="form-field"><label id="venta-nombre-label">Nombre del cliente</label><input type="text" id="venta-nombre-input" placeholder="Nombre completo"></div>
+      <div class="form-field"><label>NSS (Número de Seguridad Social)</label><input type="text" id="venta-nss-input" maxlength="11" inputmode="numeric" placeholder="11 dígitos"></div>
+      <div class="form-field"><label>CURP</label><input type="text" id="venta-curp-input" maxlength="18" style="text-transform:uppercase;" placeholder="18 caracteres"></div>
+      <div class="form-field"><label>Teléfono (opcional, para recordatorios)</label><input type="text" id="venta-tel-input" placeholder="10 dígitos"></div>
+
+      <div class="resumen-venta">
+        <div class="rv-fila">
+          <span class="rv-label" id="rv-label-precio">Precio de venta</span>
+          <span class="rv-monto" id="rv-precio-mostrado">$0</span>
+        </div>
+        <div class="rv-fila">
+          <span class="rv-label">Costo del trámite</span>
+          <input type="number" id="rv-costo-input" oninput="recalcularGanancia()">
+        </div>
+        <div class="rv-fila" id="rv-fila-final" style="display:none;">
+          <span class="rv-label">Precio final al cliente (opcional)</span>
+          <input type="number" id="rv-final-input" oninput="recalcularGanancia()">
+        </div>
+        <div class="rv-fila ganancia">
+          <span class="rv-label" id="rv-ganancia-label">Tu ganancia</span>
+          <span class="rv-monto" id="rv-ganancia-mostrada">$0</span>
+        </div>
+        <div class="rv-fila ganancia-vendedor" id="rv-fila-ganancia-vendedor" style="display:none;">
+          <span class="rv-label">Ganancia del vendedor (informativo)</span>
+          <span class="rv-monto" id="rv-ganancia-vendedor-mostrada">$0</span>
+        </div>
+      </div>
+
+      <div class="metodos-section">
+        <label id="rv-metodo-label">Método de pago</label>
+        <div class="metodos-grid">
+          <div class="btn-metodo selected" id="metodo-efectivo" onclick="selMetodoVenta('efectivo')">💵<br>Efectivo</div>
+          <div class="btn-metodo" id="metodo-transferencia" onclick="selMetodoVenta('transferencia')">🏦<br>Transferencia</div>
+          <div class="btn-metodo" id="metodo-tarjeta" onclick="selMetodoVenta('tarjeta')">💳<br>Tarjeta</div>
+        </div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModalVenta()">Cancelar</button>
+        <button class="btn-confirmar" onclick="confirmarVenta()">✅ Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL VENDEDOR ═══ -->
+<div class="overlay" id="overlay-vendedor" onclick="cerrarModalVendedorFondo(event)">
+  <div class="modal">
+    <h2 id="vendedor-modal-titulo">Nuevo vendedor</h2>
+    <div class="modal-sub">Datos del vendedor</div>
+    <div class="form-field"><label>Nombre</label><input type="text" id="vendedor-nombre" placeholder="Nombre del vendedor"></div>
+    <div class="form-field"><label>Teléfono (opcional)</label><input type="text" id="vendedor-tel" placeholder="10 dígitos"></div>
+    <div class="form-field"><label>Precio sugerido al vendedor (opcional)</label><input type="number" id="vendedor-precio" placeholder="Ej: 500"></div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModalVendedor()">Cancelar</button>
+      <button class="btn-confirmar" onclick="guardarVendedor()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL DETALLE VENDEDOR ═══ -->
+<div class="overlay" id="overlay-detalle-vendedor" onclick="cerrarDetalleVendedorFondo(event)">
+  <div class="modal" id="modal-detalle-vendedor"></div>
+</div>
+
+<!-- ═══ MODAL AHORRO (numpad genérico) ═══ -->
+<div class="overlay" id="overlay-numpad" onclick="cerrarNumpadFondo(event)">
+  <div class="modal">
+    <h2 id="numpad-title">Monto</h2>
+    <div class="modal-sub" id="numpad-sub"></div>
+    <div class="precio-grande">
+      <div class="precio-grande-display" id="numpad-display">$0</div>
+    </div>
+    <div class="numpad">
+      <div class="numpad-btn" onclick="numpadPress('1')">1</div>
+      <div class="numpad-btn" onclick="numpadPress('2')">2</div>
+      <div class="numpad-btn" onclick="numpadPress('3')">3</div>
+      <div class="numpad-btn" onclick="numpadPress('4')">4</div>
+      <div class="numpad-btn" onclick="numpadPress('5')">5</div>
+      <div class="numpad-btn" onclick="numpadPress('6')">6</div>
+      <div class="numpad-btn" onclick="numpadPress('7')">7</div>
+      <div class="numpad-btn" onclick="numpadPress('8')">8</div>
+      <div class="numpad-btn" onclick="numpadPress('9')">9</div>
+      <div class="numpad-btn" onclick="numpadPress('.')">.</div>
+      <div class="numpad-btn" onclick="numpadPress('0')">0</div>
+      <div class="numpad-btn btn-borrar" onclick="numpadPress('del')">⌫</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarOverlay('overlay-numpad')">Cancelar</button>
+      <button class="btn-confirmar" onclick="confirmarNumpad()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL CREAR META AHORRO ═══ -->
+<div class="overlay" id="overlay-meta-ahorro" onclick="cerrarMetaAhorroFondo(event)">
+  <div class="modal">
+    <h2>Meta de ahorro</h2>
+    <div class="form-field"><label>Nombre de la meta</label><input type="text" id="meta-nombre" placeholder="Ej: Fondo de emergencia"></div>
+    <div class="form-field"><label>Monto objetivo (opcional)</label><input type="number" id="meta-objetivo" placeholder="Déjalo vacío si no tienes uno"></div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarOverlay('overlay-meta-ahorro')">Cancelar</button>
+      <button class="btn-confirmar" onclick="guardarMetaAhorro()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL COMPROMISO ═══ -->
+<div class="overlay" id="overlay-compromiso" onclick="cerrarCompromisoFondo(event)">
+  <div class="modal">
+    <h2>Nuevo compromiso</h2>
+    <div class="form-field"><label>Concepto</label><input type="text" id="compromiso-concepto" placeholder="Ej: Renta, proveedor..."></div>
+    <div class="form-field"><label>Monto</label><input type="number" id="compromiso-monto" placeholder="0"></div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarOverlay('overlay-compromiso')">Cancelar</button>
+      <button class="btn-confirmar" onclick="guardarCompromiso()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL CONFIRM GENÉRICO ═══ -->
+<div class="overlay" id="overlay-confirm" onclick="cerrarConfirmFondo(event)">
+  <div class="modal">
+    <h2 id="confirm-titulo">¿Confirmar?</h2>
+    <div class="modal-sub" id="confirm-texto"></div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarOverlay('overlay-confirm')">Cancelar</button>
+      <button class="btn-confirmar" id="confirm-btn-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL DETALLE DÍA ═══ -->
+<div class="overlay" id="overlay-dia" onclick="cerrarDiaFondo(event)">
+  <div class="modal" id="modal-detalle-dia"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-venta" onclick="cambiarNavTab('venta')">
+    <div class="nav-icon">🩺</div><div class="nav-label">Venta</div>
+  </div>
+  <div class="nav-item" id="nav-clientes" onclick="cambiarNavTab('clientes')" style="position:relative;">
+    <div class="nav-icon">🗓️</div><div class="nav-label">Clientes</div>
+    <div class="nav-badge" id="nav-badge-clientes">0</div>
+  </div>
+  <div class="nav-item" id="nav-vendedores" onclick="cambiarNavTab('vendedores')">
+    <div class="nav-icon">🤝</div><div class="nav-label">Vendedores</div>
+  </div>
+  <div class="nav-item" id="nav-dinero" onclick="cambiarNavTab('dinero')">
+    <div class="nav-icon">💰</div><div class="nav-label">Dinero</div>
+  </div>
+  <div class="nav-item" id="nav-registro" onclick="cambiarNavTab('registro')">
+    <div class="nav-icon">📋</div><div class="nav-label">Registro</div>
+  </div>
+  <div class="nav-item" id="nav-ajustes" onclick="cambiarNavTab('ajustes')">
+    <div class="nav-icon">⚙️</div><div class="nav-label">Ajustes</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ══════════════════════════════ ESTADO Y PERSISTENCIA ══════════════════════════════ */
+const LS = (k,d) => { try { const v = localStorage.getItem(k); return v!==null ? JSON.parse(v) : d; } catch(e){ return d; } };
+const SV = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+let config = LS('imss_config', { costoDefault: 300, pctPagos: 50, pctPersonal: 30, pctAhorro: 20, pin: '', cicloDias: 28, diaRecordatorio: 23 });
+if (config.cicloDias === undefined) config.cicloDias = 28;
+if (config.diaRecordatorio === undefined) config.diaRecordatorio = 23;
+let vendedores = LS('imss_vendedores', []);
+let ventas = LS('imss_ventas', []);           // ventas/renovaciones del día en curso
+let clientes = LS('imss_clientes', []);       // altas activas con su ciclo de vigencia
+let gastos = LS('imss_gastos', []);           // gastos del día en curso
+let ahorros = LS('imss_ahorros', []);         // [{id,nombre,saldo,meta}]
+let compromisos = LS('imss_compromisos', []);
+let historial = LS('imss_historial', []);
+let modoClaro = LS('imss_modo_claro', false);
+
+let ventaTipo = 'directa';
+let ventaVendedorId = null;
+let ventaPrecioStr = '';
+let ventaMetodo = 'efectivo';
+let numpadCallback = null;
+let lockInput = '';
+let clientesFiltroActual = 'todos';
+let renovarClienteId = null;
+
+function guardarTodo(){
+  SV('imss_config', config); SV('imss_vendedores', vendedores); SV('imss_ventas', ventas);
+  SV('imss_clientes', clientes);
+  SV('imss_gastos', gastos); SV('imss_ahorros', ahorros); SV('imss_compromisos', compromisos);
+  SV('imss_historial', historial);
+}
+const DIA_MS = 86400000;
+
+/* ══════════════════════════════ INICIO / PIN ══════════════════════════════ */
+function initApp(){
+  document.getElementById('header-fecha').textContent = new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'short'});
+  aplicarModo();
+  if (config.pin && config.pin.length === 4) {
+    document.getElementById('overlay-lock').classList.add('visible');
+    renderLockDots();
+  }
+  document.getElementById('ajuste-costo-default').value = config.costoDefault;
+  document.getElementById('ajuste-pin').value = config.pin || '';
+  document.getElementById('pct-pagos').value = config.pctPagos;
+  document.getElementById('pct-personal').value = config.pctPersonal;
+  document.getElementById('pct-ahorro').value = config.pctAhorro;
+  document.getElementById('ajuste-ciclo-dias').value = config.cicloDias;
+  document.getElementById('ajuste-dia-recordatorio').value = config.diaRecordatorio;
+  document.getElementById('switch-modo-claro').checked = modoClaro;
+  renderTodo();
+}
+function renderLockDots(){
+  const wrap = document.getElementById('lock-dots'); wrap.innerHTML='';
+  for(let i=0;i<4;i++){ const d=document.createElement('div'); d.className='lock-dot'+(i<lockInput.length?' filled':''); wrap.appendChild(d); }
+}
+function lockPress(k){
+  document.getElementById('lock-error').textContent='';
+  if (k==='del'){ lockInput = lockInput.slice(0,-1); renderLockDots(); return; }
+  if (lockInput.length>=4) return;
+  lockInput += k; renderLockDots();
+  if (lockInput.length===4){
+    if (lockInput === config.pin){ document.getElementById('overlay-lock').classList.remove('visible'); lockInput=''; }
+    else { document.getElementById('lock-error').textContent='PIN incorrecto'; setTimeout(()=>{ lockInput=''; renderLockDots(); },500); }
+  }
+}
+
+/* ══════════════════════════════ NAVEGACIÓN ══════════════════════════════ */
+function cambiarNavTab(tab){
+  document.querySelectorAll('.seccion').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('nav-'+tab).classList.add('active');
+  if (tab==='vendedores') renderVendedores();
+  if (tab==='dinero') renderDinero();
+  if (tab==='registro') renderRegistro();
+  if (tab==='clientes') renderClientes();
+}
+function cambiarSubTab(grupo, key){
+  const map = {
+    dinero: ['reparto','ahorros','compromisos'],
+    registro: ['hoy','gastos','historial','analisis']
+  };
+  if (grupo==='registro' && key==='analisis') renderAnalisis();
+  map[grupo].forEach(k=>{
+    document.getElementById(grupo+'-'+k).style.display = (k===key)?'block':'none';
+  });
+  document.querySelectorAll('#submenu-'+grupo+' .sub-item').forEach((el,i)=>{
+    el.classList.toggle('active', map[grupo][i]===key);
+  });
+}
+
+function renderTodo(){
+  actualizarHeaderTotal();
+  renderVentaTab();
+  renderVendedores();
+  actualizarBadgeClientes();
+}
+
+/* ══════════════════════════════ CÁLCULOS BASE ══════════════════════════════ */
+function gananciaDeVenta(v){ return v.precioVenta - v.costo; }
+function gananciaBrutaHoy(){ return ventas.reduce((s,v)=>s+gananciaDeVenta(v),0); }
+function gastosNegocioHoy(){ return gastos.filter(g=>g.tipo==='negocio').reduce((s,g)=>s+g.monto,0); }
+function gastosPersonalHoy(){ return gastos.filter(g=>g.tipo==='personal').reduce((s,g)=>s+g.monto,0); }
+function gananciaNetaHoy(){ return gananciaBrutaHoy() - gastosNegocioHoy(); }
+
+function actualizarHeaderTotal(){
+  document.getElementById('header-total-monto').textContent = '$'+Math.round(gananciaNetaHoy()).toLocaleString('es-MX');
+}
+
+/* ══════════════════════════════ TAB VENTA ══════════════════════════════ */
+function seleccionarTipoVenta(tipo){
+  ventaTipo = tipo;
+  document.getElementById('btn-tipo-directa').classList.toggle('active', tipo==='directa');
+  document.getElementById('btn-tipo-vendedor').classList.toggle('active', tipo==='vendedor');
+  document.getElementById('wrap-selector-vendedor').style.display = tipo==='vendedor' ? 'block':'none';
+  if (tipo==='vendedor'){ renderVendedorGridVenta(); }
+  actualizarBotonVenta();
+}
+function renderVendedorGridVenta(){
+  const wrap = document.getElementById('venta-vendedor-grid');
+  if (vendedores.length===0){
+    wrap.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🤝</div>Aún no tienes vendedores.<br>Agrega uno en la pestaña Vendedores.</div>';
+    return;
+  }
+  wrap.innerHTML = vendedores.map(v=>`
+    <div class="vendedor-chip ${ventaVendedorId===v.id?'selected':''}" onclick="elegirVendedorVenta('${v.id}')">
+      <div class="vc-nombre">${v.nombre}</div>
+      <div class="vc-precio">${v.precioDefault?('$'+v.precioDefault+' sugerido'):'Sin precio sugerido'}</div>
+    </div>`).join('');
+}
+function elegirVendedorVenta(id){
+  ventaVendedorId = id;
+  renderVendedorGridVenta();
+  actualizarBotonVenta();
+}
+function actualizarBotonVenta(){
+  const btn = document.getElementById('btn-abrir-venta');
+  btn.disabled = (ventaTipo==='vendedor' && (!ventaVendedorId || vendedores.length===0));
+}
+function renderVentaTab(){
+  actualizarBotonVenta();
+  const list = document.getElementById('ventas-hoy-list');
+  if (ventas.length===0){
+    list.innerHTML = '<div class="empty-state"><div class="icon">🩺</div>Aún no registras ventas hoy.</div>';
+    return;
+  }
+  list.innerHTML = ventas.slice().reverse().map(v=>{
+    const vend = v.tipo==='vendedor' ? (vendedores.find(x=>x.id===v.vendedorId)||{nombre:'(eliminado)'}).nombre : null;
+    return `<div class="venta-hoy-item ${v.tipo==='vendedor'?'vendedor':''}">
+      <div class="vh-info">
+        <div class="vh-nombre">${v.tipo==='vendedor' ? '🤝 '+vend : '🙋 Venta directa'}</div>
+        <div class="vh-detalle">${nombreMetodo(v.metodoPago)} · costo $${v.costo}${v.precioFinalCliente?(' · cliente pagó $'+v.precioFinalCliente):''}</div>
+      </div>
+      <div class="vh-montos">
+        <div class="vh-precio">$${v.precioVenta.toLocaleString('es-MX')}</div>
+        <div class="vh-ganancia">+$${gananciaDeVenta(v).toLocaleString('es-MX')} ganancia</div>
+      </div>
+      <button class="btn-eliminar" onclick="eliminarVenta('${v.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function nombreMetodo(m){ return {efectivo:'💵 Efectivo',transferencia:'🏦 Transferencia',tarjeta:'💳 Tarjeta'}[m] || m; }
+function eliminarVenta(id){
+  ventas = ventas.filter(v=>v.id!==id);
+  guardarTodo(); renderVentaTab(); actualizarHeaderTotal();
+  mostrarToast('Venta eliminada');
+}
+
+/* ── MODAL DE VENTA ── */
+function abrirModalVenta(){
+  if (ventaTipo==='vendedor' && !ventaVendedorId) { mostrarToast('Elige un vendedor primero'); return; }
+  ventaPrecioStr = '';
+  ventaMetodo = 'efectivo';
+  const p1t = document.getElementById('venta-p1-titulo');
+  const p1s = document.getElementById('venta-p1-sub');
+  if (ventaTipo==='directa'){
+    p1t.textContent = 'Precio de venta al cliente';
+    p1s.textContent = 'Lo que te va a pagar el cliente';
+  } else {
+    const v = vendedores.find(x=>x.id===ventaVendedorId);
+    p1t.textContent = 'Precio al vendedor';
+    p1s.textContent = 'Lo que le vas a cobrar a '+(v?v.nombre:'');
+  }
+  document.getElementById('venta-precio-display').textContent = '$0';
+  document.getElementById('btn-venta-siguiente').disabled = true;
+  document.getElementById('paso-venta-1').classList.add('activo');
+  document.getElementById('paso-venta-2').classList.remove('activo');
+  document.getElementById('overlay-venta').classList.add('visible');
+}
+function cerrarModalVenta(){ document.getElementById('overlay-venta').classList.remove('visible'); }
+function cerrarModalVentaFondo(e){ if(e.target.id==='overlay-venta') cerrarModalVenta(); }
+function ventaNumpadPress(k){
+  if (k==='del') ventaPrecioStr = ventaPrecioStr.slice(0,-1);
+  else if (k==='.'){ if(!ventaPrecioStr.includes('.')) ventaPrecioStr += (ventaPrecioStr===''?'0.':'.'); }
+  else { ventaPrecioStr = (ventaPrecioStr==='0') ? k : ventaPrecioStr + k; }
+  document.getElementById('venta-precio-display').textContent = '$'+(ventaPrecioStr||'0');
+  document.getElementById('btn-venta-siguiente').disabled = !(parseFloat(ventaPrecioStr)>0);
+}
+function irPasoVenta2(){
+  const precio = parseFloat(ventaPrecioStr||'0');
+  if (!(precio>0)) return;
+  document.getElementById('paso-venta-1').classList.remove('activo');
+  document.getElementById('paso-venta-2').classList.add('activo');
+  document.getElementById('rv-precio-mostrado').textContent = '$'+precio.toLocaleString('es-MX');
+  document.getElementById('rv-costo-input').value = config.costoDefault;
+  document.getElementById('rv-final-input').value = '';
+  document.getElementById('rv-fila-final').style.display = ventaTipo==='vendedor' ? 'flex' : 'none';
+  document.getElementById('rv-fila-ganancia-vendedor').style.display = 'none';
+  document.getElementById('rv-label-precio').textContent = ventaTipo==='directa' ? 'Precio de venta' : 'Precio al vendedor';
+  document.getElementById('rv-ganancia-label').textContent = ventaTipo==='directa' ? 'Tu ganancia' : 'Tu ganancia (de este vendedor)';
+  document.getElementById('rv-metodo-label').textContent = ventaTipo==='directa' ? 'Método de pago del cliente' : 'Cómo te pagó el vendedor';
+  document.getElementById('venta-nombre-label').textContent = ventaTipo==='directa' ? 'Nombre del cliente' : 'Nombre del cliente final (o referencia)';
+  document.getElementById('venta-nombre-input').value = reactivarPrefill ? reactivarPrefill.nombre : '';
+  document.getElementById('venta-nss-input').value = reactivarPrefill ? reactivarPrefill.nss : '';
+  document.getElementById('venta-curp-input').value = reactivarPrefill ? reactivarPrefill.curp : '';
+  document.getElementById('venta-tel-input').value = reactivarPrefill ? reactivarPrefill.telefono : '';
+  reactivarPrefill = null;
+  selMetodoVenta('efectivo');
+  recalcularGanancia();
+}
+function volverPasoVenta1(){
+  document.getElementById('paso-venta-2').classList.remove('activo');
+  document.getElementById('paso-venta-1').classList.add('activo');
+}
+function selMetodoVenta(m){
+  ventaMetodo = m;
+  ['efectivo','transferencia','tarjeta'].forEach(x=>document.getElementById('metodo-'+x).classList.toggle('selected', x===m));
+}
+function recalcularGanancia(){
+  const precio = parseFloat(ventaPrecioStr||'0');
+  const costo = parseFloat(document.getElementById('rv-costo-input').value||'0');
+  const ganancia = precio - costo;
+  document.getElementById('rv-ganancia-mostrada').textContent = '$'+ganancia.toLocaleString('es-MX');
+  if (ventaTipo==='vendedor'){
+    const final = parseFloat(document.getElementById('rv-final-input').value||'0');
+    if (final>0){
+      document.getElementById('rv-fila-ganancia-vendedor').style.display = 'flex';
+      document.getElementById('rv-ganancia-vendedor-mostrada').textContent = '$'+(final-precio).toLocaleString('es-MX');
+    } else {
+      document.getElementById('rv-fila-ganancia-vendedor').style.display = 'none';
+    }
+  }
+}
+function confirmarVenta(){
+  const nombre = document.getElementById('venta-nombre-input').value.trim();
+  if (!nombre){ mostrarToast('Escribe el nombre del cliente'); return; }
+  const nss = document.getElementById('venta-nss-input').value.trim();
+  const curp = document.getElementById('venta-curp-input').value.trim().toUpperCase();
+  const telefono = document.getElementById('venta-tel-input').value.trim();
+  const precio = parseFloat(ventaPrecioStr||'0');
+  const costo = parseFloat(document.getElementById('rv-costo-input').value||'0');
+  const final = ventaTipo==='vendedor' ? parseFloat(document.getElementById('rv-final-input').value||'0') : 0;
+
+  const hoy = Date.now();
+  const cliente = {
+    id: 'cl'+Date.now(), nombre, nss, curp, telefono, tipo: ventaTipo,
+    vendedorId: ventaTipo==='vendedor' ? ventaVendedorId : null,
+    fechaInicio: hoy, fechaVencimiento: hoy + config.cicloDias*DIA_MS,
+    costoActual: costo, precioActual: precio, precioFinalActual: final>0 ? final : null,
+    estado: 'activo',
+    historial: []
+  };
+  clientes.push(cliente);
+
+  const venta = {
+    id: 'v'+Date.now(), fecha: hoy, tipo: ventaTipo,
+    vendedorId: ventaTipo==='vendedor' ? ventaVendedorId : null,
+    clienteId: cliente.id, nombreCliente: nombre, tipoTransaccion: 'alta',
+    precioVenta: precio, costo: costo,
+    precioFinalCliente: final>0 ? final : null,
+    metodoPago: ventaMetodo
+  };
+  ventas.push(venta);
+  cliente.historial.push({ id:venta.id, fecha:hoy, tipo:'alta', precioVenta:precio, costo, metodoPago:ventaMetodo });
+
+  guardarTodo();
+  cerrarModalVenta();
+  actualizarHeaderTotal();
+  renderVentaTab();
+  actualizarBadgeClientes();
+  mostrarToast('✅ Alta registrada — ganancia $'+(precio-costo).toLocaleString('es-MX'));
+  ventaVendedorId = null;
+  if (ventaTipo==='vendedor') renderVendedorGridVenta();
+  actualizarBotonVenta();
+}
+
+/* ══════════════════════════════ TAB VENDEDORES ══════════════════════════════ */
+let vendedorEditId = null;
+function abrirModalVendedor(id){
+  vendedorEditId = id || null;
+  const v = id ? vendedores.find(x=>x.id===id) : null;
+  document.getElementById('vendedor-modal-titulo').textContent = v ? 'Editar vendedor' : 'Nuevo vendedor';
+  document.getElementById('vendedor-nombre').value = v ? v.nombre : '';
+  document.getElementById('vendedor-tel').value = v ? (v.telefono||'') : '';
+  document.getElementById('vendedor-precio').value = v ? (v.precioDefault||'') : '';
+  document.getElementById('overlay-vendedor').classList.add('visible');
+  setTimeout(()=>document.getElementById('vendedor-nombre').focus(),150);
+}
+function cerrarModalVendedor(){ document.getElementById('overlay-vendedor').classList.remove('visible'); }
+function cerrarModalVendedorFondo(e){ if(e.target.id==='overlay-vendedor') cerrarModalVendedor(); }
+function guardarVendedor(){
+  const nombre = document.getElementById('vendedor-nombre').value.trim();
+  if (!nombre){ mostrarToast('Escribe un nombre'); return; }
+  const tel = document.getElementById('vendedor-tel').value.trim();
+  const precio = parseFloat(document.getElementById('vendedor-precio').value||'0') || null;
+  if (vendedorEditId){
+    const v = vendedores.find(x=>x.id===vendedorEditId);
+    v.nombre = nombre; v.telefono = tel; v.precioDefault = precio;
+  } else {
+    vendedores.push({ id:'vd'+Date.now(), nombre, telefono: tel, precioDefault: precio });
+  }
+  guardarTodo();
+  cerrarModalVendedor();
+  renderVendedores();
+  mostrarToast('Vendedor guardado');
+}
+function statsVendedor(id){
+  const todas = ventas.filter(v=>v.vendedorId===id);
+  const hist = historial.flatMap(d=>d.ventas.filter(v=>v.vendedorId===id));
+  const all = todas.concat(hist);
+  return {
+    numVentas: all.length,
+    totalCobrado: all.reduce((s,v)=>s+v.precioVenta,0),
+    miGanancia: all.reduce((s,v)=>s+(v.precioVenta-v.costo),0)
+  };
+}
+function renderVendedores(){
+  const list = document.getElementById('vendedores-list');
+  if (vendedores.length===0){
+    list.innerHTML = '<div class="empty-state"><div class="icon">🤝</div>Aún no tienes vendedores registrados.</div>';
+    return;
+  }
+  list.innerHTML = vendedores.map(v=>{
+    const s = statsVendedor(v.id);
+    return `<div class="vendedor-card" onclick="verDetalleVendedor('${v.id}')">
+      <div class="vc-top">
+        <div>
+          <div class="vc-nombre-grande">${v.nombre}</div>
+          <div class="vc-tel">${v.telefono || 'Sin teléfono'}</div>
+        </div>
+      </div>
+      <div class="vc-stats">
+        <div class="vc-stat"><div class="vs-label">Altas vendidas</div><div class="vs-valor">${s.numVentas}</div></div>
+        <div class="vc-stat"><div class="vs-label">Tu ganancia</div><div class="vs-valor">$${s.miGanancia.toLocaleString('es-MX')}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function verDetalleVendedor(id){
+  const v = vendedores.find(x=>x.id===id);
+  const s = statsVendedor(id);
+  const todas = ventas.filter(x=>x.vendedorId===id).slice().reverse();
+  document.getElementById('modal-detalle-vendedor').innerHTML = `
+    <h2>${v.nombre}</h2>
+    <div class="modal-sub">${v.telefono||'Sin teléfono'}${v.precioDefault?(' · precio sugerido $'+v.precioDefault):''}</div>
+    <div class="dc-fila"><span class="dc-label">Altas vendidas (total)</span><span class="dc-monto">${s.numVentas}</span></div>
+    <div class="dc-fila"><span class="dc-label">Total que te ha pagado</span><span class="dc-monto">$${s.totalCobrado.toLocaleString('es-MX')}</span></div>
+    <div class="dc-fila neto"><span class="dc-label">Tu ganancia generada por él</span><span class="dc-monto">$${s.miGanancia.toLocaleString('es-MX')}</span></div>
+    <div class="cat-label" style="margin-top:14px;">Ventas de hoy con este vendedor</div>
+    <div>${ todas.length===0 ? '<div class="empty-state">Sin ventas hoy.</div>' : todas.map(vv=>`
+      <div class="venta-hoy-item vendedor">
+        <div class="vh-info"><div class="vh-nombre">${nombreMetodo(vv.metodoPago)}</div>
+          <div class="vh-detalle">costo $${vv.costo}${vv.precioFinalCliente?(' · cliente pagó $'+vv.precioFinalCliente):''}</div></div>
+        <div class="vh-montos"><div class="vh-precio">$${vv.precioVenta.toLocaleString('es-MX')}</div>
+          <div class="vh-ganancia">+$${(vv.precioVenta-vv.costo).toLocaleString('es-MX')}</div></div>
+      </div>`).join('') }</div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="editarVendedorDesdeDetalle('${id}')">✏️ Editar</button>
+      <button class="btn-confirmar" style="background:var(--perdida);" onclick="pedirEliminarVendedor('${id}')">🗑️ Eliminar</button>
+    </div>
+  `;
+  document.getElementById('overlay-detalle-vendedor').classList.add('visible');
+}
+function editarVendedorDesdeDetalle(id){ cerrarOverlay('overlay-detalle-vendedor'); abrirModalVendedor(id); }
+function pedirEliminarVendedor(id){
+  const v = vendedores.find(x=>x.id===id);
+  abrirConfirm('Eliminar vendedor', '¿Eliminar a '+v.nombre+'? Su historial de ventas ya cerradas se conserva, pero no podrá recibir nuevas ventas.', ()=>{
+    vendedores = vendedores.filter(x=>x.id!==id);
+    guardarTodo();
+    cerrarOverlay('overlay-detalle-vendedor');
+    renderVendedores();
+    mostrarToast('Vendedor eliminado');
+  });
+}
+function cerrarDetalleVendedorFondo(e){ if(e.target.id==='overlay-detalle-vendedor') cerrarOverlay('overlay-detalle-vendedor'); }
+
+/* ══════════════════════════════ TAB DINERO ══════════════════════════════ */
+function actualizarPct(){
+  const p = parseFloat(document.getElementById('pct-pagos').value||'0');
+  const per = parseFloat(document.getElementById('pct-personal').value||'0');
+  const a = parseFloat(document.getElementById('pct-ahorro').value||'0');
+  config.pctPagos = p; config.pctPersonal = per; config.pctAhorro = a;
+  guardarTodo();
+  document.getElementById('pct-warn').classList.toggle('visible', (p+per+a)!==100);
+  renderDinero();
+}
+function renderDinero(){
+  const neto = gananciaNetaHoy();
+  const cascada = document.getElementById('dist-cascada');
+  cascada.innerHTML = `
+    <div class="dc-fila"><span class="dc-label">Ganancia bruta de ventas</span><span class="dc-monto">$${gananciaBrutaHoy().toLocaleString('es-MX')}</span></div>
+    <div class="dc-fila"><span class="dc-label">— Gastos de negocio</span><span class="dc-monto" style="color:var(--perdida);">-$${gastosNegocioHoy().toLocaleString('es-MX')}</span></div>
+    <div class="dc-fila neto"><span class="dc-label">Ganancia neta a repartir</span><span class="dc-monto">$${neto.toLocaleString('es-MX')}</span></div>
+  `;
+  const pagos = neto * (config.pctPagos/100);
+  const personal = neto * (config.pctPersonal/100);
+  const ahorro = neto * (config.pctAhorro/100);
+  document.getElementById('dist-pagos').textContent = '$'+Math.round(pagos).toLocaleString('es-MX');
+  document.getElementById('dist-personal').textContent = '$'+Math.round(personal).toLocaleString('es-MX');
+  document.getElementById('dist-ahorro').textContent = '$'+Math.round(ahorro).toLocaleString('es-MX');
+  const gp = gastosPersonalHoy();
+  document.querySelector('#dist-personal').nextElementSibling.textContent = gp>0
+    ? ('Ya gastaste $'+gp.toLocaleString('es-MX')+' · disponible $'+Math.round(personal-gp).toLocaleString('es-MX'))
+    : 'Tus gastos personales';
+  renderAhorros();
+  renderCompromisos();
+}
+function abrirModalAhorro(){ /* alias */ abrirModalMetaAhorro(); }
+function abrirModalMetaAhorro(){
+  document.getElementById('meta-nombre').value = '';
+  document.getElementById('meta-objetivo').value = '';
+  document.getElementById('overlay-meta-ahorro').classList.add('visible');
+}
+function cerrarMetaAhorroFondo(e){ if(e.target.id==='overlay-meta-ahorro') cerrarOverlay('overlay-meta-ahorro'); }
+function guardarMetaAhorro(){
+  const nombre = document.getElementById('meta-nombre').value.trim();
+  if (!nombre){ mostrarToast('Escribe un nombre'); return; }
+  const meta = parseFloat(document.getElementById('meta-objetivo').value||'0') || null;
+  ahorros.push({ id:'ah'+Date.now(), nombre, saldo:0, meta });
+  guardarTodo(); cerrarOverlay('overlay-meta-ahorro'); renderAhorros();
+  mostrarToast('Meta creada');
+}
+function renderAhorros(){
+  const list = document.getElementById('ahorros-list');
+  if (ahorros.length===0){ list.innerHTML = '<div class="empty-state"><div class="icon">🐷</div>Aún no tienes metas de ahorro.</div>'; return; }
+  list.innerHTML = ahorros.map(a=>{
+    const pct = a.meta ? Math.min(100, Math.round(a.saldo/a.meta*100)) : 0;
+    return `<div class="ahorro-item">
+      <div class="ahorro-top"><span class="ahorro-nombre">${a.nombre}</span><span class="ahorro-monto">$${a.saldo.toLocaleString('es-MX')}</span></div>
+      ${a.meta ? `<div class="ahorro-barra-wrap"><div class="ahorro-barra" style="width:${pct}%"></div></div><div class="ahorro-meta-txt">${pct}% de $${a.meta.toLocaleString('es-MX')}</div>` : ''}
+      <div class="ahorro-btns-row">
+        <button class="dep" onclick="movAhorro('${a.id}','deposito')">➕ Depositar</button>
+        <button class="ret" onclick="movAhorro('${a.id}','retiro')">➖ Retirar</button>
+        <button onclick="pedirEliminarAhorro('${a.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function movAhorro(id, tipo){
+  abrirNumpad(tipo==='deposito'?'Depositar':'Retirar', 'Meta: '+ahorros.find(a=>a.id===id).nombre, (val)=>{
+    const a = ahorros.find(x=>x.id===id);
+    if (tipo==='deposito') a.saldo += val;
+    else a.saldo = Math.max(0, a.saldo - val);
+    guardarTodo(); renderAhorros();
+    mostrarToast(tipo==='deposito'?'Depósito guardado':'Retiro guardado');
+  });
+}
+function pedirEliminarAhorro(id){
+  abrirConfirm('Eliminar meta', '¿Eliminar esta meta de ahorro? El saldo se perderá del registro.', ()=>{
+    ahorros = ahorros.filter(a=>a.id!==id); guardarTodo(); renderAhorros();
+  });
+}
+function abrirModalCompromiso(){
+  document.getElementById('compromiso-concepto').value='';
+  document.getElementById('compromiso-monto').value='';
+  document.getElementById('overlay-compromiso').classList.add('visible');
+}
+function cerrarCompromisoFondo(e){ if(e.target.id==='overlay-compromiso') cerrarOverlay('overlay-compromiso'); }
+function guardarCompromiso(){
+  const c = document.getElementById('compromiso-concepto').value.trim();
+  const m = parseFloat(document.getElementById('compromiso-monto').value||'0');
+  if (!c || !(m>0)){ mostrarToast('Completa concepto y monto'); return; }
+  compromisos.push({ id:'co'+Date.now(), concepto:c, monto:m, fecha:Date.now(), pagado:false });
+  guardarTodo(); cerrarOverlay('overlay-compromiso'); renderCompromisos();
+}
+function renderCompromisos(){
+  const list = document.getElementById('compromisos-list');
+  if (compromisos.length===0){ list.innerHTML = '<div class="empty-state"><div class="icon">💳</div>Sin compromisos pendientes.</div>'; return; }
+  list.innerHTML = compromisos.slice().reverse().map(c=>`
+    <div class="compromiso-item ${c.pagado?'pagado':''}" onclick="toggleCompromiso('${c.id}')">
+      <div><div class="co-nombre">${c.pagado?'✅ ':''}${c.concepto}</div><div class="co-fecha">${new Date(c.fecha).toLocaleDateString('es-MX')}</div></div>
+      <div class="co-monto">$${c.monto.toLocaleString('es-MX')}</div>
+    </div>`).join('');
+}
+function toggleCompromiso(id){
+  const c = compromisos.find(x=>x.id===id); c.pagado = !c.pagado; guardarTodo(); renderCompromisos();
+}
+
+/* ══════════════════════════════ NUMPAD GENÉRICO ══════════════════════════════ */
+let numpadValue = '';
+function abrirNumpad(title, sub, onConfirm){
+  numpadValue = ''; numpadCallback = onConfirm;
+  document.getElementById('numpad-title').textContent = title;
+  document.getElementById('numpad-sub').textContent = sub || '';
+  document.getElementById('numpad-display').textContent = '$0';
+  document.getElementById('overlay-numpad').classList.add('visible');
+}
+function numpadPress(k){
+  if (k==='del') numpadValue = numpadValue.slice(0,-1);
+  else if (k==='.'){ if(!numpadValue.includes('.')) numpadValue += (numpadValue===''?'0.':'.'); }
+  else { numpadValue = (numpadValue==='0') ? k : numpadValue + k; }
+  document.getElementById('numpad-display').textContent = '$'+(numpadValue||'0');
+}
+function confirmarNumpad(){
+  const val = parseFloat(numpadValue||'0');
+  if (numpadCallback) numpadCallback(val);
+  cerrarOverlay('overlay-numpad');
+}
+function cerrarNumpadFondo(e){ if(e.target.id==='overlay-numpad') cerrarOverlay('overlay-numpad'); }
+
+/* ══════════════════════════════ CONFIRM GENÉRICO ══════════════════════════════ */
+function abrirConfirm(titulo, texto, onOk){
+  document.getElementById('confirm-titulo').textContent = titulo;
+  document.getElementById('confirm-texto').textContent = texto;
+  const btn = document.getElementById('confirm-btn-ok');
+  btn.onclick = () => { onOk(); cerrarOverlay('overlay-confirm'); };
+  document.getElementById('overlay-confirm').classList.add('visible');
+}
+function cerrarConfirmFondo(e){ if(e.target.id==='overlay-confirm') cerrarOverlay('overlay-confirm'); }
+function cerrarOverlay(id){ document.getElementById(id).classList.remove('visible'); }
+
+/* ══════════════════════════════ TAB REGISTRO ══════════════════════════════ */
+function renderRegistro(){
+  renderResumenHoy();
+  renderGastosList();
+  renderHistorial();
+}
+function renderResumenHoy(){
+  const bruto = gananciaBrutaHoy(), gn = gastosNegocioHoy(), gp = gastosPersonalHoy(), neto = gananciaNetaHoy();
+  document.getElementById('resumen-hoy-body').innerHTML = `
+    <div class="resumen-fila"><span class="concepto">Altas vendidas</span><span class="monto">${ventas.length}</span></div>
+    <div class="resumen-fila"><span class="concepto">Ganancia bruta</span><span class="monto">$${bruto.toLocaleString('es-MX')}</span></div>
+    <div class="resumen-fila"><span class="concepto">Gastos de negocio</span><span class="monto" style="color:var(--perdida)">-$${gn.toLocaleString('es-MX')}</span></div>
+    <div class="resumen-fila"><span class="concepto">Gastos personales</span><span class="monto" style="color:var(--perdida)">-$${gp.toLocaleString('es-MX')}</span></div>
+    <div class="resumen-fila total-final"><span class="concepto">Ganancia neta del día</span><span class="monto">$${neto.toLocaleString('es-MX')}</span></div>
+  `;
+}
+function selTipoGasto(tipo){
+  gastoTipoActual = tipo;
+  document.getElementById('tg-negocio').classList.toggle('selected', tipo==='negocio');
+  document.getElementById('tg-personal').classList.toggle('selected', tipo==='personal');
+}
+let gastoTipoActual = 'negocio';
+let gastoStr = '';
+function gastoNumpadPress(k){
+  if (k==='del') gastoStr = gastoStr.slice(0,-1);
+  else if (k==='.'){ if(!gastoStr.includes('.')) gastoStr += (gastoStr===''?'0.':'.'); }
+  else { gastoStr = (gastoStr==='0') ? k : gastoStr + k; }
+  document.getElementById('gasto-display').textContent = '$'+(gastoStr||'0');
+}
+function agregarGasto(){
+  const concepto = document.getElementById('gasto-concepto').value.trim();
+  const monto = parseFloat(gastoStr||'0');
+  if (!concepto || !(monto>0)){ mostrarToast('Completa concepto y monto'); return; }
+  gastos.push({ id:'g'+Date.now(), concepto, monto, tipo: gastoTipoActual, fecha: Date.now() });
+  guardarTodo();
+  document.getElementById('gasto-concepto').value=''; gastoStr=''; document.getElementById('gasto-display').textContent='$0';
+  renderGastosList(); actualizarHeaderTotal();
+  mostrarToast('Gasto agregado');
+}
+function renderGastosList(){
+  const list = document.getElementById('gastos-list');
+  if (gastos.length===0){ list.innerHTML = '<div class="empty-state"><div class="icon">💸</div>Sin gastos hoy.</div>'; return; }
+  list.innerHTML = gastos.slice().reverse().map(g=>`
+    <div class="movimiento gasto">
+      <div><div class="nombre-mov">${g.concepto}</div><div class="detalle-mov">${g.tipo==='negocio'?'📦 Negocio':'🧍 Personal'}</div></div>
+      <div style="display:flex;align-items:center;"><div class="monto-mov">-$${g.monto.toLocaleString('es-MX')}</div>
+      <button class="btn-eliminar" onclick="eliminarGasto('${g.id}')">✕</button></div>
+    </div>`).join('');
+}
+function eliminarGasto(id){ gastos = gastos.filter(g=>g.id!==id); guardarTodo(); renderGastosList(); actualizarHeaderTotal(); }
+
+function pedirCerrarDia(){
+  if (ventas.length===0 && gastos.length===0){ mostrarToast('No hay nada que cerrar hoy'); return; }
+  abrirConfirm('Cerrar el día', 'Se guardará el resumen de hoy en el historial y se reiniciará el registro para un nuevo día. Esta acción no se puede deshacer.', confirmarCerrarDia);
+}
+function confirmarCerrarDia(){
+  const neto = gananciaNetaHoy();
+  const dia = {
+    id:'d'+Date.now(), fecha: Date.now(), ventas: ventas.slice(), gastos: gastos.slice(),
+    gananciaBruta: gananciaBrutaHoy(), gastosNegocio: gastosNegocioHoy(), gastosPersonal: gastosPersonalHoy(),
+    gananciaNeta: neto,
+    distribucion: {
+      pagos: neto*(config.pctPagos/100), personal: neto*(config.pctPersonal/100), ahorro: neto*(config.pctAhorro/100)
+    }
+  };
+  // El ahorro del reparto se suma automáticamente a un fondo general si existe, si no se crea uno.
+  if (dia.distribucion.ahorro > 0){
+    let fondo = ahorros.find(a=>a.esFondoGeneral);
+    if (!fondo){ fondo = { id:'ah_general', nombre:'Ahorro general (reparto diario)', saldo:0, meta:null, esFondoGeneral:true }; ahorros.unshift(fondo); }
+    fondo.saldo += dia.distribucion.ahorro;
+  }
+  historial.unshift(dia);
+  ventas = []; gastos = [];
+  guardarTodo();
+  actualizarHeaderTotal();
+  renderTodo(); renderRegistro();
+  mostrarToast('📆 Día cerrado y guardado en historial');
+}
+
+function renderHistorial(){
+  const list = document.getElementById('historial-list');
+  if (historial.length===0){ list.innerHTML = '<div class="empty-state"><div class="icon">📆</div>Aún no has cerrado ningún día.</div>'; return; }
+  list.innerHTML = historial.map(d=>`
+    <div class="dia-card">
+      <div class="dia-header">
+        <span class="dia-fecha">${new Date(d.fecha).toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'})}</span>
+        <span class="dia-total-mini">$${Math.round(d.gananciaNeta).toLocaleString('es-MX')}</span>
+      </div>
+      <div class="dia-detalle">Altas vendidas: <span>${d.ventas.length}</span> · Ganancia bruta: <span>$${d.gananciaBruta.toLocaleString('es-MX')}</span></div>
+      <button class="btn-ver-dia" onclick="verDetalleDia('${d.id}')">Ver detalle</button>
+    </div>`).join('');
+}
+function verDetalleDia(id){
+  const d = historial.find(x=>x.id===id);
+  document.getElementById('modal-detalle-dia').innerHTML = `
+    <h2>${new Date(d.fecha).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})}</h2>
+    <div class="dc-fila"><span class="dc-label">Altas vendidas</span><span class="dc-monto">${d.ventas.length}</span></div>
+    <div class="dc-fila"><span class="dc-label">Ganancia bruta</span><span class="dc-monto">$${d.gananciaBruta.toLocaleString('es-MX')}</span></div>
+    <div class="dc-fila"><span class="dc-label">Gastos negocio</span><span class="dc-monto">-$${d.gastosNegocio.toLocaleString('es-MX')}</span></div>
+    <div class="dc-fila neto"><span class="dc-label">Ganancia neta</span><span class="dc-monto">$${Math.round(d.gananciaNeta).toLocaleString('es-MX')}</span></div>
+    <div class="cat-label">Reparto de ese día</div>
+    <div class="dc-fila"><span class="dc-label">💳 Pagos</span><span class="dc-monto">$${Math.round(d.distribucion.pagos).toLocaleString('es-MX')}</span></div>
+    <div class="dc-fila"><span class="dc-label">🧍 Personal</span><span class="dc-monto">$${Math.round(d.distribucion.personal).toLocaleString('es-MX')}</span></div>
+    <div class="dc-fila"><span class="dc-label">🐷 Ahorro</span><span class="dc-monto">$${Math.round(d.distribucion.ahorro).toLocaleString('es-MX')}</span></div>
+    <div class="modal-btns"><button class="btn-cancelar" style="flex:1" onclick="cerrarOverlay('overlay-dia')">Cerrar</button></div>
+  `;
+  document.getElementById('overlay-dia').classList.add('visible');
+}
+function cerrarDiaFondo(e){ if(e.target.id==='overlay-dia') cerrarOverlay('overlay-dia'); }
+
+/* ══════════════════════════════ TAB ANÁLISIS ══════════════════════════════ */
+let chartGanancia = null;
+function renderAnalisis(){
+  const dias = historial.slice(0,14).slice().reverse();
+  const hoy = { fecha: Date.now(), gananciaNeta: gananciaNetaHoy() };
+  const todos = dias.concat([hoy]);
+  const labels = todos.map(d=>new Date(d.fecha).toLocaleDateString('es-MX',{day:'numeric',month:'short'}));
+  const data = todos.map(d=>Math.round(d.gananciaNeta));
+  const ctx = document.getElementById('chart-ganancia');
+  if (chartGanancia) chartGanancia.destroy();
+  if (window.Chart){
+    chartGanancia = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label:'Ganancia neta', data, backgroundColor:'#0e8a3e', borderRadius:6 }] },
+      options: { plugins:{legend:{display:false}}, scales:{ y:{ ticks:{color:'#8aab97'}, grid:{color:'#1b3826'} }, x:{ ticks:{color:'#8aab97'}, grid:{display:false} } } }
+    });
+  }
+  const rankWrap = document.getElementById('ranking-vendedores');
+  const ranking = vendedores.map(v=>({ v, s: statsVendedor(v.id) })).sort((a,b)=>b.s.miGanancia - a.s.miGanancia);
+  rankWrap.innerHTML = ranking.length===0 ? '<div class="empty-state">Sin vendedores aún.</div>' : ranking.map((r,i)=>`
+    <div class="ranking-item"><span class="rk-pos">#${i+1}</span><span class="rk-nombre">${r.v.nombre}</span><span class="rk-monto">$${r.s.miGanancia.toLocaleString('es-MX')}</span></div>
+  `).join('');
+  const totVentasHist = historial.reduce((s,d)=>s+d.ventas.length,0) + ventas.length;
+  const totGananciaHist = historial.reduce((s,d)=>s+d.gananciaNeta,0) + gananciaNetaHoy();
+  const totAhorrado = ahorros.reduce((s,a)=>s+a.saldo,0);
+  document.getElementById('totales-acumulados').innerHTML = `
+    <div class="resumen-fila"><span class="concepto">Altas vendidas (histórico + hoy)</span><span class="monto">${totVentasHist}</span></div>
+    <div class="resumen-fila"><span class="concepto">Ganancia neta acumulada</span><span class="monto">$${Math.round(totGananciaHist).toLocaleString('es-MX')}</span></div>
+    <div class="resumen-fila"><span class="concepto">Total ahorrado</span><span class="monto">$${totAhorrado.toLocaleString('es-MX')}</span></div>
+  `;
+}
+
+/* ══════════════════════════════ AJUSTES ══════════════════════════════ */
+function guardarCostoDefault(){
+  config.costoDefault = parseFloat(document.getElementById('ajuste-costo-default').value||'0');
+  guardarTodo();
+}
+function guardarCicloAjuste(){
+  config.cicloDias = parseInt(document.getElementById('ajuste-ciclo-dias').value||'28') || 28;
+  config.diaRecordatorio = parseInt(document.getElementById('ajuste-dia-recordatorio').value||'23') || 23;
+  guardarTodo();
+  document.getElementById('banner-ciclo').textContent = config.cicloDias;
+  document.getElementById('banner-recordatorio').textContent = config.diaRecordatorio;
+  renderClientes();
+}
+function guardarPinAjuste(){
+  const val = document.getElementById('ajuste-pin').value.replace(/\D/g,'').slice(0,4);
+  document.getElementById('ajuste-pin').value = val;
+  config.pin = val; guardarTodo();
+}
+function toggleModoClaroSwitch(){ toggleModoClaro(); document.getElementById('switch-modo-claro').checked = modoClaro; }
+function toggleModoClaro(){
+  modoClaro = !modoClaro; SV('imss_modo_claro', modoClaro); aplicarModo();
+  const el = document.getElementById('switch-modo-claro'); if (el) el.checked = modoClaro;
+}
+function aplicarModo(){
+  document.body.classList.toggle('modo-claro', modoClaro);
+  document.getElementById('modo-toggle-btn').textContent = modoClaro ? '🌙 Modo oscuro' : '☀️ Modo claro';
+}
+function exportarDatos(){
+  const data = { config, vendedores, ventas, clientes, gastos, ahorros, compromisos, historial };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'respaldo_altas_imss_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(url);
+  mostrarToast('Respaldo descargado');
+}
+function importarDatos(ev){
+  const file = ev.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      config = data.config || config; vendedores = data.vendedores || vendedores;
+      ventas = data.ventas || ventas; clientes = data.clientes || clientes; gastos = data.gastos || gastos;
+      ahorros = data.ahorros || ahorros; compromisos = data.compromisos || compromisos;
+      historial = data.historial || historial;
+      guardarTodo();
+      document.getElementById('ajuste-costo-default').value = config.costoDefault;
+      document.getElementById('ajuste-pin').value = config.pin || '';
+      document.getElementById('ajuste-ciclo-dias').value = config.cicloDias;
+      document.getElementById('ajuste-dia-recordatorio').value = config.diaRecordatorio;
+      renderTodo(); renderDinero(); renderRegistro(); renderAnalisis(); renderClientes();
+      mostrarToast('✅ Respaldo restaurado');
+    } catch(e){ mostrarToast('❌ Archivo inválido'); }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+function confirmarReset(){
+  abrirConfirm('Borrar todos los datos', 'Se eliminará todo: ventas, vendedores, gastos, ahorros e historial. No se puede deshacer.', ()=>{
+    localStorage.clear();
+    location.reload();
+  });
+}
+
+/* ══════════════════════════════ TAB CLIENTES / VIGENCIAS ══════════════════════════════ */
+function estadoCliente(c){
+  if (c.estado === 'baja') return 'baja';
+  const dias = Math.floor((Date.now() - c.fechaInicio) / DIA_MS);
+  if (dias >= config.cicloDias) return 'vencido';
+  if (dias >= config.diaRecordatorio) return 'porvencer';
+  return 'activo';
+}
+function diasInfoCliente(c){
+  const restantes = Math.ceil((c.fechaVencimiento - Date.now()) / DIA_MS);
+  return restantes;
+}
+function filtrarClientes(f){
+  clientesFiltroActual = f;
+  document.querySelectorAll('.clientes-filtro .cf-btn').forEach(b=>b.classList.toggle('active', b.dataset.f===f));
+  renderClientes();
+}
+function ordenPrioridad(estado){ return {vencido:0, porvencer:1, activo:2, baja:3}[estado]; }
+function renderClientes(){
+  document.getElementById('banner-ciclo').textContent = config.cicloDias;
+  document.getElementById('banner-recordatorio').textContent = config.diaRecordatorio;
+  let lista = clientes.map(c=>({ c, estado: estadoCliente(c) }));
+  if (clientesFiltroActual !== 'todos') lista = lista.filter(x=>x.estado===clientesFiltroActual);
+  lista.sort((a,b)=>ordenPrioridad(a.estado)-ordenPrioridad(b.estado) || a.c.fechaVencimiento-b.c.fechaVencimiento);
+  const wrap = document.getElementById('clientes-list');
+  if (lista.length===0){ wrap.innerHTML = '<div class="empty-state"><div class="icon">🗓️</div>No hay clientes en este filtro.</div>'; actualizarBadgeClientes(); return; }
+  wrap.innerHTML = lista.map(({c,estado})=>{
+    const restantes = diasInfoCliente(c);
+    const vend = c.tipo==='vendedor' ? (vendedores.find(v=>v.id===c.vendedorId)||{nombre:'(vendedor eliminado)'}).nombre : null;
+    const badgeTxt = estado==='baja' ? 'DE BAJA' : estado==='vencido' ? ('VENCIÓ hace '+Math.abs(restantes)+' día'+(Math.abs(restantes)===1?'':'s')) : estado==='porvencer' ? ('Vence en '+restantes+' día'+(restantes===1?'':'s')) : ('Vence en '+restantes+' días');
+    const badgeIcon = {vencido:'🔴',porvencer:'🟡',activo:'🟢',baja:'⚪'}[estado];
+    return `<div class="cliente-card st-${estado}">
+      <div class="cc-top">
+        <div>
+          <div class="cc-nombre">${c.nombre}</div>
+          <div class="cc-sub">${c.tipo==='vendedor' ? '🤝 vía '+vend : '🙋 cliente directo'}${c.telefono?(' · '+c.telefono):''}</div>
+        </div>
+        <span class="cc-badge st-${estado}">${badgeIcon} ${badgeTxt}</span>
+      </div>
+      <div class="cc-fechas">Alta: ${new Date(c.fechaInicio).toLocaleDateString('es-MX',{day:'numeric',month:'short'})} · Vence: ${new Date(c.fechaVencimiento).toLocaleDateString('es-MX',{day:'numeric',month:'short'})} · precio $${c.precioActual}</div>
+      <div class="cc-fechas" style="margin-top:-6px;">NSS: ${c.nss||'—'} · CURP: ${c.curp||'—'}</div>
+      <div class="cc-btns">
+        <button onclick="verDetalleCliente('${c.id}')">👁️ Ver / editar datos</button>
+        ${estado!=='baja' ? `<button class="pago" onclick="abrirRenovar('${c.id}')">💰 Registrar pago</button>` : ''}
+        ${(estado!=='baja' && c.telefono) ? `<button class="wa" onclick="recordarWhatsapp('${c.id}')">📲 WhatsApp</button>` : ''}
+        ${estado!=='baja' ? `<button class="baja" onclick="pedirBajaCliente('${c.id}')">📵 Dar de baja</button>` : `<button class="pago" onclick="reactivarCliente('${c.id}')">🔄 Alta nueva</button>`}
+      </div>
+    </div>`;
+  }).join('');
+  actualizarBadgeClientes();
+}
+function verDetalleCliente(id){
+  const c = clientes.find(x=>x.id===id);
+  const vend = c.tipo==='vendedor' ? (vendedores.find(v=>v.id===c.vendedorId)||{nombre:'(vendedor eliminado)'}).nombre : null;
+  document.getElementById('modal-detalle-cliente').innerHTML = `
+    <h2>${c.nombre}</h2>
+    <div class="modal-sub">${c.tipo==='vendedor' ? '🤝 vía '+vend : '🙋 cliente directo'}</div>
+    <div class="form-field"><label>Nombre</label><input type="text" id="ed-nombre" value="${c.nombre.replace(/"/g,'&quot;')}"></div>
+    <div class="form-field"><label>NSS (Número de Seguridad Social)</label><input type="text" id="ed-nss" maxlength="11" inputmode="numeric" value="${c.nss||''}"></div>
+    <div class="form-field"><label>CURP</label><input type="text" id="ed-curp" maxlength="18" style="text-transform:uppercase;" value="${c.curp||''}"></div>
+    <div class="form-field"><label>Teléfono</label><input type="text" id="ed-tel" value="${c.telefono||''}"></div>
+    <div class="dc-fila"><span class="dc-label">Fecha de alta actual</span><span class="dc-monto">${new Date(c.fechaInicio).toLocaleDateString('es-MX')}</span></div>
+    <div class="dc-fila neto"><span class="dc-label">Fecha de vencimiento</span><span class="dc-monto">${new Date(c.fechaVencimiento).toLocaleDateString('es-MX')}</span></div>
+    <div class="cat-label" style="margin-top:14px;">Historial de pagos</div>
+    <div>${c.historial.slice().reverse().map(h=>`
+      <div class="venta-hoy-item ${c.tipo==='vendedor'?'vendedor':''}">
+        <div class="vh-info"><div class="vh-nombre">${h.tipo==='alta'?'🆕 Alta inicial':'🔄 Renovación'}</div>
+          <div class="vh-detalle">${new Date(h.fecha).toLocaleDateString('es-MX')} · ${nombreMetodo(h.metodoPago)} · costo $${h.costo}</div></div>
+        <div class="vh-montos"><div class="vh-precio">$${h.precioVenta.toLocaleString('es-MX')}</div>
+          <div class="vh-ganancia">+$${(h.precioVenta-h.costo).toLocaleString('es-MX')}</div></div>
+      </div>`).join('') || '<div class="empty-state">Sin pagos registrados.</div>'}</div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarOverlay('overlay-detalle-cliente')">Cerrar</button>
+      <button class="btn-confirmar" onclick="guardarEdicionCliente('${c.id}')">💾 Guardar datos</button>
+    </div>
+  `;
+  document.getElementById('overlay-detalle-cliente').classList.add('visible');
+}
+function guardarEdicionCliente(id){
+  const c = clientes.find(x=>x.id===id);
+  c.nombre = document.getElementById('ed-nombre').value.trim() || c.nombre;
+  c.nss = document.getElementById('ed-nss').value.trim();
+  c.curp = document.getElementById('ed-curp').value.trim().toUpperCase();
+  c.telefono = document.getElementById('ed-tel').value.trim();
+  guardarTodo();
+  cerrarOverlay('overlay-detalle-cliente');
+  renderClientes();
+  mostrarToast('Datos actualizados');
+}
+function cerrarDetalleClienteFondo(e){ if(e.target.id==='overlay-detalle-cliente') cerrarOverlay('overlay-detalle-cliente'); }
+function actualizarBadgeClientes(){
+  const badge = document.getElementById('nav-badge-clientes');
+  const n = clientes.filter(c=>{ const e=estadoCliente(c); return e==='vencido'||e==='porvencer'; }).length;
+  badge.textContent = n;
+  badge.classList.toggle('visible', n>0);
+}
+function recordarWhatsapp(id){
+  const c = clientes.find(x=>x.id===id);
+  const tel = (c.telefono||'').replace(/\D/g,'');
+  if (!tel){ mostrarToast('Este cliente no tiene teléfono'); return; }
+  const msg = `Hola ${c.nombre}, te escribo para recordarte que tu alta del IMSS está por vencer / venció. Para seguir dado de alta necesitas cubrir tu pago de este mes. Cualquier duda con gusto te apoyo 🙌`;
+  window.open('https://wa.me/52'+tel+'?text='+encodeURIComponent(msg), '_blank');
+}
+function pedirBajaCliente(id){
+  const c = clientes.find(x=>x.id===id);
+  abrirConfirm('Dar de baja', '¿Marcar a '+c.nombre+' como dado de baja? Dejará de aparecer en recordatorios. Si vuelve a pagar más adelante, se registra como alta nueva.', ()=>{
+    c.estado = 'baja'; guardarTodo(); renderClientes();
+    mostrarToast('Cliente dado de baja');
+  });
+}
+let reactivarPrefill = null;
+function reactivarCliente(id){
+  const c = clientes.find(x=>x.id===id);
+  reactivarPrefill = { nombre: c.nombre, nss: c.nss||'', curp: c.curp||'', telefono: c.telefono||'' };
+  ventaTipo = c.tipo; ventaVendedorId = c.vendedorId;
+  if (c.tipo==='vendedor'){
+    seleccionarTipoVenta('vendedor');
+    elegirVendedorVenta(c.vendedorId);
+  } else {
+    seleccionarTipoVenta('directa');
+  }
+  abrirModalVenta();
+  mostrarToast('Se registrará como alta nueva para '+c.nombre);
+}
+
+/* ── RENOVACIÓN (pago de mensualidad) ── */
+function abrirRenovar(id){
+  renovarClienteId = id;
+  const c = clientes.find(x=>x.id===id);
+  document.getElementById('modal-renovar').innerHTML = `
+    <h2>Registrar pago — ${c.nombre}</h2>
+    <div class="modal-sub">Esto renueva su vigencia por ${config.cicloDias} días más (no cuenta como alta nueva)</div>
+    <div class="resumen-venta">
+      <div class="rv-fila"><span class="rv-label">Precio de la mensualidad</span><input type="number" id="ren-precio" value="${c.precioActual}" oninput="recalcularRenovacion()"></div>
+      <div class="rv-fila"><span class="rv-label">Costo del trámite</span><input type="number" id="ren-costo" value="${c.costoActual}" oninput="recalcularRenovacion()"></div>
+      ${c.tipo==='vendedor' ? `<div class="rv-fila"><span class="rv-label">Precio final al cliente (opcional)</span><input type="number" id="ren-final" value="${c.precioFinalActual||''}"></div>` : ''}
+      <div class="rv-fila ganancia"><span class="rv-label">Tu ganancia</span><span class="rv-monto" id="ren-ganancia">$0</span></div>
+    </div>
+    <div class="metodos-section">
+      <label>Método de pago</label>
+      <div class="metodos-grid">
+        <div class="btn-metodo selected" id="ren-metodo-efectivo" onclick="selMetodoRenovar('efectivo')">💵<br>Efectivo</div>
+        <div class="btn-metodo" id="ren-metodo-transferencia" onclick="selMetodoRenovar('transferencia')">🏦<br>Transferencia</div>
+        <div class="btn-metodo" id="ren-metodo-tarjeta" onclick="selMetodoRenovar('tarjeta')">💳<br>Tarjeta</div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarOverlay('overlay-renovar')">Cancelar</button>
+      <button class="btn-confirmar" onclick="confirmarRenovacion()">✅ Registrar pago</button>
+    </div>
+  `;
+  renovarMetodo = 'efectivo';
+  document.getElementById('overlay-renovar').classList.add('visible');
+  recalcularRenovacion();
+}
+let renovarMetodo = 'efectivo';
+function selMetodoRenovar(m){
+  renovarMetodo = m;
+  ['efectivo','transferencia','tarjeta'].forEach(x=>document.getElementById('ren-metodo-'+x).classList.toggle('selected', x===m));
+}
+function recalcularRenovacion(){
+  const precio = parseFloat(document.getElementById('ren-precio').value||'0');
+  const costo = parseFloat(document.getElementById('ren-costo').value||'0');
+  document.getElementById('ren-ganancia').textContent = '$'+(precio-costo).toLocaleString('es-MX');
+}
+function cerrarRenovarFondo(e){ if(e.target.id==='overlay-renovar') cerrarOverlay('overlay-renovar'); }
+function confirmarRenovacion(){
+  const c = clientes.find(x=>x.id===renovarClienteId);
+  const precio = parseFloat(document.getElementById('ren-precio').value||'0');
+  const costo = parseFloat(document.getElementById('ren-costo').value||'0');
+  const finalEl = document.getElementById('ren-final');
+  const final = finalEl ? parseFloat(finalEl.value||'0') : 0;
+  const hoy = Date.now();
+
+  const venta = {
+    id:'v'+Date.now(), fecha:hoy, tipo:c.tipo, vendedorId:c.vendedorId,
+    clienteId:c.id, nombreCliente:c.nombre, tipoTransaccion:'renovacion',
+    precioVenta:precio, costo:costo, precioFinalCliente: final>0?final:null, metodoPago: renovarMetodo
+  };
+  ventas.push(venta);
+
+  const baseVencimiento = c.fechaVencimiento < hoy ? hoy : c.fechaVencimiento;
+  c.fechaInicio = baseVencimiento - (config.cicloDias*DIA_MS) + (config.cicloDias*DIA_MS); // marca inicio del nuevo periodo
+  c.fechaInicio = baseVencimiento === hoy ? hoy - 0 : c.fechaInicio;
+  c.fechaInicio = (c.fechaVencimiento < hoy) ? hoy : c.fechaVencimiento;
+  c.fechaVencimiento = c.fechaInicio + config.cicloDias*DIA_MS;
+  c.precioActual = precio; c.costoActual = costo; if (final>0) c.precioFinalActual = final;
+  c.estado = 'activo';
+  c.historial.push({ id:venta.id, fecha:hoy, tipo:'renovacion', precioVenta:precio, costo, metodoPago:renovarMetodo });
+
+  guardarTodo();
+  cerrarOverlay('overlay-renovar');
+  actualizarHeaderTotal();
+  renderClientes();
+  mostrarToast('✅ Pago registrado — vigente hasta '+new Date(c.fechaVencimiento).toLocaleDateString('es-MX'));
+}
+
+/* ══════════════════════════════ TOAST ══════════════════════════════ */
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+initApp();
+</script>
+</body>
+</html>
